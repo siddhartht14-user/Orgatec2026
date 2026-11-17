@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#141414">
+<title>Haworth Product Selector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* hide all scrollbars (scrolling still works) */
+  html,body,*{scrollbar-width:none;-ms-overflow-style:none}
+  *::-webkit-scrollbar,html::-webkit-scrollbar,body::-webkit-scrollbar{width:0!important;height:0!important;display:none!important;background:transparent}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#141414;color:#fff;overflow:hidden;overscroll-behavior:none;
+    font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-user-select:none;user-select:none}
+  #app{height:100vh;height:100dvh;display:flex;flex-direction:column;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  header{flex:none;text-align:center;padding:12px 0 12px}
+  .logo{display:block;margin:0 auto;height:clamp(17px,4.6vw,21px);width:auto;pointer-events:none}
+
+  #stage{flex:1;min-height:0;position:relative}
+  .card{position:absolute;inset:0;display:flex;flex-direction:column;background:#141414;
+    touch-action:none;will-change:transform;cursor:grab}
+  .card.back{transform:scale(.94) translateY(10px);opacity:.55;pointer-events:none;transition:transform .25s,opacity .25s}
+  .card.dragging{cursor:grabbing;transition:none}
+  .photo{flex:1;min-height:0;position:relative;overflow:hidden;background:#222}
+  .photo img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+  .meta{flex:none;text-align:center;padding:12px 14px 4px;line-height:1.3}
+  .meta h2{margin:0 0 3px;font-weight:400;font-size:clamp(21px,6vw,27px)}
+  .meta p{margin:0;font-weight:300;font-size:clamp(15px,4.2vw,18px)}
+  .stamp{position:absolute;top:22px;padding:4px 14px;border:4px solid;border-radius:10px;font-weight:600;
+    font-size:30px;letter-spacing:.06em;opacity:0;pointer-events:none;background:rgba(0,0,0,.25)}
+  .stamp.yeah{left:18px;color:#4cc02b;border-color:#4cc02b;transform:rotate(-14deg)}
+  .stamp.nah{right:18px;color:#ff3b30;border-color:#ff3b30;transform:rotate(14deg)}
+
+  .actions{flex:none;display:flex;align-items:center;justify-content:space-between;padding:10px 16px 14px;gap:8px}
+  .count{flex:1;text-align:center;font-size:clamp(15px,4.2vw,18px);font-weight:500;letter-spacing:.04em;color:#cfcfcf;white-space:nowrap}
+  .btn{border:0;border-radius:999px;padding:8px 16px;flex:none;font:500 clamp(15px,4.1vw,18px)/1.2 'Poppins',sans-serif;color:#fff;cursor:pointer;
+    transition:transform .12s,filter .12s;min-height:44px}
+  .btn:active{transform:scale(.94);filter:brightness(1.15)}
+  .btn.nah{background:rgba(205,70,70,.16);border:1px solid rgba(235,120,120,.30);color:#e9aaa6;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  .btn.yeah{background:rgba(80,170,80,.16);border:1px solid rgba(130,205,130,.30);color:#abd8a5;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  .btn:disabled{opacity:.35}
+
+  #done{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+  .dscroll{flex:1;min-height:0;overflow:auto;padding:6px 18px 12px;-webkit-overflow-scrolling:touch}
+  .dfoot{flex:none;padding:8px 18px 14px;display:flex;flex-direction:column;gap:8px}
+  .dfoot .btn{width:100%;text-align:center}
+  .btn.pdf{background:#fff;color:#141414}
+  .btn.ghost{background:transparent;border:1px solid #4a4a4a;color:#fff}
+  .toast{text-align:center;font-size:13px;color:#aaa;min-height:18px;margin:0}
+  #done h2{font-weight:400;font-size:26px;margin:10px 0 4px;text-align:center}
+  #done .sub{font-weight:300;text-align:center;color:#aaa;margin:0 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .tile{background:#1f1f1f;border-radius:10px;overflow:hidden;text-align:center;font-size:13px}
+  .tile img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+  .tile div{padding:6px 4px 8px;line-height:1.25}.tile small{color:#9a9a9a;font-weight:300}
+  .hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:12px;color:#fff;font-weight:300;
+    text-shadow:0 1px 6px #000;pointer-events:none;animation:fade 4s 1s forwards;opacity:.9}
+  @keyframes fade{to{opacity:0}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <img class="logo" src="img/haworth-logo.png" alt="HAWORTH">
+  </header>
+  <div id="stage">
+    <div id="done"></div>
+  </div>
+  <div class="actions" id="actions">
+    <button class="btn nah" id="bNah">Swipe Nah</button>
+    <div class="count" id="count" aria-live="polite"></div>
+    <button class="btn yeah" id="bYeah">Swipe Yeah</button>
+  </div>
+</div>
+<script src="products.js"></script>
+<script>
+(function(){
+  const P = window.PRODUCTS, stage = document.getElementById('stage'), done = document.getElementById('done'), actions = document.getElementById('actions'), count = document.getElementById('count'),
+        bNah = document.getElementById('bNah'), bYeah = document.getElementById('bYeah');
+  let idx = 0, busy = false, results = [];
+
+  function cardEl(p, back){
+    const c = document.createElement('div');
+    c.className = 'card' + (back ? ' back' : '');
+    c.innerHTML = '<div class="photo"><img alt="" draggable="false"><span class="stamp yeah">YEAH</span><span class="stamp nah">NAH</span></div>' +
+      '<div class="meta"><h2></h2><p class="b"></p><p class="d"></p></div>';
+    c.querySelector('img').src = p.image;
+    c.querySelector('h2').textContent = p.name;
+    c.querySelector('.b').textContent = p.brand;
+    const d = c.querySelector('.d'); if (p.designer) d.textContent = 'Designed by ' + p.designer; else d.remove();
+    if (p.focus) c.querySelector('img').style.objectPosition = p.focus;
+    return c;
+  }
+  function render(){
+    stage.querySelectorAll('.card').forEach(n => n.remove());
+    count.textContent = idx < P.length ? (idx + 1) + '/' + P.length : '';
+    if (idx >= P.length) return finish();
+    done.style.display = 'none'; actions.style.visibility = 'visible';
+    if (idx + 1 < P.length) stage.appendChild(cardEl(P[idx+1], true));
+    const top = cardEl(P[idx], false);
+    stage.appendChild(top);
+    attach(top);
+    if (idx === 0){ const h = document.createElement('div'); h.className='hint'; h.textContent='Drag the card, or tap a button'; top.querySelector('.photo').appendChild(h); }
+  }
+  function finish(){
+    actions.style.visibility = 'hidden';
+    const liked = P.filter((_, i) => results[i] === 'yeah');
+    done.style.display = 'flex';
+    done.innerHTML = '<div class="dscroll"><h2>Your shortlist</h2><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p><div class="grid"></div></div><div class="dfoot"><p class="toast" id="toast" role="status"></p></div>';
+    const g = done.querySelector('.grid');
+    liked.forEach(p => {
+      const t = document.createElement('div'); t.className = 'tile';
+      t.innerHTML = '<img alt=""><div></div>';
+      t.querySelector('img').src = p.image;
+      if (p.focus) t.querySelector('img').style.objectPosition = p.focus;
+      t.querySelector('div').innerHTML = '<b style="font-weight:500"></b><br><small></small>';
+      t.querySelector('b').textContent = p.name; t.querySelector('small').textContent = p.brand;
+      g.appendChild(t);
+    });
+    if (!liked.length) g.innerHTML = '<p class="sub" style="grid-column:1/-1">Nothing yet. Try again?</p>';
+    const foot = done.querySelector('.dfoot'), toast = done.querySelector('#toast');
+    const pdf = document.createElement('button'); pdf.className = 'btn pdf'; pdf.textContent = 'Download selection as PDF';
+    pdf.onclick = async () => {
+      if (!liked.length) { toast.textContent = 'Swipe Yeah on a few products first.'; return; }
+      pdf.textContent = 'Preparing PDF…'; pdf.disabled = true; toast.textContent = '';
+      try {
+        const mail = notify(liked);
+        const blob = await buildPdf(liked);
+        const how = await savePdf(blob, 'Haworth-selection-' + new Date().toISOString().slice(0, 10) + '.pdf');
+        const sent = await mail;
+        toast.textContent = (how === 'cancelled' ? 'Download cancelled.' : 'PDF ready.') + (sent ? ' Email sent.' : ' Email not sent.');
+      } catch (err) { toast.textContent = 'Couldn’t create the PDF. Try again.'; console.error(err); }
+      pdf.textContent = 'Download selection as PDF'; pdf.disabled = false;
+    };
+    const r = document.createElement('button'); r.className = 'btn ghost'; r.textContent = 'Start again';
+    r.onclick = () => { idx = 0; results = []; render(); };
+    foot.appendChild(pdf); foot.appendChild(r);
+  }
+  async function notify(liked){
+    try {
+      const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total: P.length, selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '' })) }) });
+      return r.ok;
+    } catch (e) { return false; }
+  }
+  function loadScript(src){ return new Promise((res, rej) => { if (window.jspdf) return res(); const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = () => rej(new Error('PDF library failed to load')); document.head.appendChild(el); }); }
+  function loadImg(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Image failed: ' + src)); i.src = src; }); }
+  function tileData(img, focus, tw, th){
+    const f = (focus || '50% 50%').split(/\s+/).map(v => parseFloat(v) / 100), fx = f[0], fy = isNaN(f[1]) ? .5 : f[1];
+    const c = document.createElement('canvas'); c.width = tw; c.height = th;
+    const sc = Math.max(tw / img.naturalWidth, th / img.naturalHeight), sw = tw / sc, sh = th / sc;
+    c.getContext('2d').drawImage(img, (img.naturalWidth - sw) * fx, (img.naturalHeight - sh) * fy, sw, sh, 0, 0, tw, th);
+    return c.toDataURL('image/jpeg', .85);
+  }
+  async function buildPdf(items){
+    await loadScript('js/jspdf.umd.min.js');
+    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, H = 297, M = 14, GAP = 6, COLS = 3;
+    const logo = await loadImg('img/haworth-logo.png'), ratio = logo.naturalWidth / logo.naturalHeight;
+    const lc = document.createElement('canvas'); lc.width = logo.naturalWidth; lc.height = logo.naturalHeight; lc.getContext('2d').drawImage(logo, 0, 0);
+    const logoUrl = lc.toDataURL('image/png');
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    function band(first){
+      const bh = first ? 36 : 16, lh = first ? 7 : 5, lw = lh * ratio;
+      doc.setFillColor(20, 20, 20); doc.rect(0, 0, W, bh, 'F');
+      doc.addImage(logoUrl, 'PNG', (W - lw) / 2, first ? 9 : 5.5, lw, lh);
+      if (first) { doc.setTextColor(190, 190, 190); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+        doc.text('Product selection  ·  ' + dateStr + '  ·  ' + items.length + ' of ' + P.length + ' liked', W / 2, 28, { align: 'center' }); }
+      return bh;
+    }
+    const cw = (W - 2 * M - (COLS - 1) * GAP) / COLS, ih = cw * 4 / 3, th = 17, pitch = ih + th + 7;
+    const imgs = await Promise.all(items.map(p => loadImg(p.image)));
+    let y = band(true) + 10, col = 0;
+    items.forEach((p, i) => {
+      if (col === 0 && y + ih + th > H - M) { doc.addPage(); y = band(false) + 10; }
+      const x = M + col * (cw + GAP);
+      doc.addImage(tileData(imgs[i], p.focus, 600, 800), 'JPEG', x, y, cw, ih);
+      doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(doc.splitTextToSize(p.name, cw)[0], x, y + ih + 5.5);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110, 110, 110);
+      doc.text(doc.splitTextToSize(p.brand, cw)[0], x, y + ih + 10);
+      if (p.designer) doc.text(doc.splitTextToSize('Designed by ' + p.designer, cw)[0], x, y + ih + 14.5);
+      if (++col === COLS) { col = 0; y += pitch; }
+    });
+    return doc.output('blob');
+  }
+  async function savePdf(blob, filename){
+    try {
+      if (window.claude && window.claude.use) { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename, data: blob }); return 'saved'; } }
+    } catch (e) { if (/declin|cancel|denied|reject/i.test((e && e.message) || '')) return 'cancelled'; }
+    if (window.parent !== window) {
+      const bytes = await blob.arrayBuffer();
+      const r = await new Promise(res => {
+        const id = Math.random().toString(36).slice(2);
+        const h = e => { if (e.data && e.data.type === 'haworth-pdf-result' && e.data.id === id) { removeEventListener('message', h); res(e.data); } };
+        addEventListener('message', h);
+        parent.postMessage({ type: 'haworth-pdf', id, filename, bytes }, '*', [bytes]);
+        setTimeout(() => { removeEventListener('message', h); res({ ok: false }); }, 20000);
+      });
+      if (r.ok) return r.cancelled ? 'cancelled' : 'saved';
+      if (r.cancelled) return 'cancelled';
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    return 'link';
+  }
+  function decide(card, dir, vx){
+    if (busy) return; busy = true;
+    const w = stage.clientWidth;
+    card.classList.remove('dragging');
+    const cur = card._x || 0;
+    card.style.transition = 'transform .32s cubic-bezier(.2,.7,.3,1), opacity .32s';
+    card.style.transform = 'translate(' + (dir * w * 1.3) + 'px,' + ((card._y||0) + 30) + 'px) rotate(' + (dir * 24) + 'deg)';
+    card.style.opacity = '0';
+    const nextBack = stage.querySelector('.card.back');
+    if (nextBack){ nextBack.style.transform = 'none'; nextBack.style.opacity = '1'; }
+    results[idx] = dir > 0 ? 'yeah' : 'nah';
+    setTimeout(() => { idx++; busy = false; render(); }, 300);
+  }
+  function attach(card){
+    let sx, sy, down = false, lastX, lastT, v = 0;
+    const yeah = card.querySelector('.stamp.yeah'), nah = card.querySelector('.stamp.nah');
+    card._x = 0; card._y = 0;
+    card.addEventListener('pointerdown', e => {
+      if (busy) return;
+      down = true; sx = e.clientX; sy = e.clientY; lastX = sx; lastT = performance.now(); v = 0;
+      card.classList.add('dragging'); card.setPointerCapture(e.pointerId);
+    });
+    card.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy, now = performance.now();
+      v = (e.clientX - lastX) / Math.max(1, now - lastT); lastX = e.clientX; lastT = now;
+      card._x = dx; card._y = dy * .35;
+      card.style.transform = 'translate(' + dx + 'px,' + card._y + 'px) rotate(' + (dx / 18) + 'deg)';
+      const k = Math.min(1, Math.abs(dx) / 110);
+      yeah.style.opacity = dx > 0 ? k : 0; nah.style.opacity = dx < 0 ? k : 0;
+      const nb = stage.querySelector('.card.back');
+      if (nb){ nb.style.transition = 'none'; const s = .94 + .06 * k; nb.style.transform = 'scale(' + s + ') translateY(' + (10 * (1 - k)) + 'px)'; nb.style.opacity = .55 + .45 * k; }
+    });
+    function end(e){
+      if (!down) return; down = false;
+      const dx = card._x, thresh = stage.clientWidth * .28;
+      if (Math.abs(dx) > thresh || Math.abs(v) > .6 && Math.abs(dx) > 40){
+        decide(card, (dx || v) > 0 ? 1 : -1, v);
+      } else {
+        card.classList.remove('dragging');
+        card.style.transition = 'transform .3s cubic-bezier(.2,.9,.3,1.2)';
+        card.style.transform = 'none'; card._x = card._y = 0;
+        yeah.style.opacity = nah.style.opacity = 0;
+        const nb = stage.querySelector('.card.back');
+        if (nb){ nb.style.transition = 'transform .25s, opacity .25s'; nb.style.transform = ''; nb.style.opacity = ''; }
+      }
+    }
+    card.addEventListener('pointerup', end);
+    card.addEventListener('pointercancel', end);
+  }
+  function button(dir){
+    const top = stage.querySelector('.card:not(.back)'); if (!top || busy) return;
+    const s = top.querySelector('.stamp.' + (dir > 0 ? 'yeah' : 'nah')); s.style.opacity = 1;
+    decide(top, dir, 0);
+  }
+  bNah.onclick = () => button(-1); bYeah.onclick = () => button(1);
+  addEventListener('keydown', e => { if (e.key === 'ArrowLeft') button(-1); if (e.key === 'ArrowRight') button(1); });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haworth Product Selector – Prototype</title>
+<style>
+  /* hide all scrollbars (scrolling still works) */
+  html,body,*{scrollbar-width:none;-ms-overflow-style:none}
+  *::-webkit-scrollbar,html::-webkit-scrollbar,body::-webkit-scrollbar{width:0!important;height:0!important;display:none!important;background:transparent}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#0d0d0d;color:#ddd;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  /* On a real phone: show the app full screen */
+  #real{display:none;position:fixed;inset:0;border:0;width:100%;height:100%;background:#141414}
+  body.mobile #real{display:block}
+  body.mobile #lab{display:none}
+
+  #lab{padding:22px 20px 40px}
+  h1{font-size:18px;font-weight:600;margin:0 0 4px;color:#fff}
+  .note{font-size:13px;color:#999;margin:0 0 18px;max-width:900px;line-height:1.5}
+  .note b{color:#ccc;font-weight:500}
+  #wrap{transform-origin:top left}
+  #row{display:flex;gap:56px;align-items:flex-start;width:max-content}
+  .dev .label{font-size:13px;color:#bbb;margin:0 0 4px;text-align:center}
+  .dev .label small{display:block;color:#777;font-size:11px}
+  .phone{background:#050505;border:2px solid #3a3a3c;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .screen{position:relative;overflow:hidden;background:#141414}
+  .screen iframe{position:absolute;left:0;border:0;width:100%;background:#141414}
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:118px;height:34px;background:#000;border-radius:20px;z-index:5}
+  .status{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:600;font-size:16px;background:#141414;z-index:4}
+  .status .t{padding-left:34px}.status .r{padding-right:30px;font-size:13px;letter-spacing:1px}
+
+  /* Safari bottom bar */
+  .safari{position:absolute;left:0;right:0;bottom:0;background:#141414;z-index:4;padding:8px 14px 0;display:flex;align-items:flex-start;gap:10px}
+  .safari .c{width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 16px rgba(0,0,0,.35);color:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+  .safari .p{flex:1;height:44px;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 16px rgba(0,0,0,.35);color:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-size:15px}
+  .safari .home{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.55)}
+
+  /* Chrome Android */
+  .chromebar{position:absolute;left:0;right:0;top:28px;height:56px;background:#1f1f1f;z-index:4;display:flex;align-items:center;gap:10px;padding:0 12px;color:#e3e3e3;font-size:14px}
+  .chromebar .u{flex:1;height:40px;border-radius:20px;background:#303030;display:flex;align-items:center;padding:0 14px}
+  .chromebar .ic{width:26px;text-align:center;font-size:18px;color:#c7c7c7}
+  .android-nav{position:absolute;left:0;right:0;bottom:0;height:24px;background:#141414;z-index:4}
+  .android-nav i{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:110px;height:4px;border-radius:2px;background:#ddd}
+  .cam{position:absolute;top:9px;left:50%;width:12px;height:12px;border-radius:50%;background:#000;z-index:6;transform:translateX(-50%);box-shadow:0 0 0 2px #111}
+</style>
+</head>
+<body>
+<iframe id="real" src="index.html" title="Haworth Product Selector"></iframe>
+
+<div id="lab">
+  <h1>Haworth Product Selector – device preview</h1>
+  <p class="note">Each frame is a live, working copy of the app at that phone’s real CSS viewport, with the browser toolbars drawn at their approximate size so you can judge the space you actually get.
+  <b>Drag the cards</b> (or use the Nah / Yeah buttons, or ← → keys). To test on real hardware, open this same link on the phone: it switches to full-screen app mode automatically.</p>
+  <div id="wrap"><div id="row"></div></div>
+</div>
+
+<script>
+addEventListener('message', async function(e){
+  const d = e.data; if (!d || d.type !== 'haworth-pdf') return;
+  const reply = function(m){ try { e.source.postMessage(Object.assign({ type: 'haworth-pdf-result', id: d.id }, m), '*'); } catch (_) {} };
+  try {
+    const dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null;
+    if (!dl) return reply({ ok: false, error: 'unavailable' });
+    await dl.save({ filename: d.filename, data: new Blob([d.bytes], { type: 'application/pdf' }) });
+    reply({ ok: true });
+  } catch (err) {
+    const m = String((err && err.message) || err);
+    reply({ ok: false, cancelled: /declin|cancel|denied|reject/i.test(m), error: m });
+  }
+});
+</script>
+<script>
+(function(){
+  if (Math.min(innerWidth, innerHeight) < 600 && matchMedia('(pointer:coarse)').matches) { document.body.classList.add('mobile'); return; }
+
+  const devices = [
+    { id:'ip16',  label:'iPhone 16', sub:'Safari · 393 × 852', W:393, H:852, bezel:12, r:56, kind:'safari', top:45, bottom:90 },
+    { id:'ip16pm',label:'iPhone 16 Pro Max', sub:'Safari · 440 × 956', W:440, H:956, bezel:12, r:60, kind:'safari', top:45, bottom:94 },
+    { id:'s25u',  label:'Samsung Galaxy S25 Ultra', sub:'Chrome · 412 × 915', W:412, H:915, bezel:8, r:30, kind:'chrome', top:84, bottom:24 }
+  ];
+  const row = document.getElementById('row');
+  devices.forEach(d => {
+    const vh = d.H - d.top - d.bottom;
+    const el = document.createElement('div'); el.className = 'dev';
+    let chrome = '';
+    if (d.kind === 'safari') {
+      chrome = '<div class="status" style="height:'+d.top+'px;padding-top:11px"><span class="t">9:41</span><span class="r">●●●● 5G ▮</span></div><div class="island"></div>' +
+        '<div class="safari" style="height:'+d.bottom+'px"><div class="c">‹</div><div class="p">🔒 haworth.claude.ai</div><div class="c">⋯</div><div class="home"></div></div>';
+    } else {
+      chrome = '<div class="status" style="height:28px;font-size:13px"><span class="t" style="padding-left:24px">9:41</span><span class="r" style="padding-right:20px">▲ ▮ 100%</span></div><div class="cam"></div>' +
+        '<div class="chromebar"><span class="ic">⌂</span><div class="u">🔒&nbsp; haworth.claude.ai</div><span class="ic">1</span><span class="ic">⋮</span></div>' +
+        '<div class="android-nav"><i></i></div>';
+    }
+    el.innerHTML = '<p class="label">'+d.label+'<small>'+d.sub+'</small></p>' +
+      '<div class="phone" style="border-radius:'+(d.r+d.bezel)+'px;padding:'+d.bezel+'px"><div class="screen" style="width:'+d.W+'px;height:'+d.H+'px;border-radius:'+d.r+'px">' +
+      chrome + '<iframe src="index.html" title="'+d.label+'" style="top:'+d.top+'px;height:'+vh+'px"></iframe></div></div>';
+    row.appendChild(el);
+  });
+
+  function fit(){
+    const wrap = document.getElementById('wrap'), lab = document.getElementById('lab');
+    wrap.style.transform = 'none';
+    const nw = row.offsetWidth, nh = row.offsetHeight;
+    const s = Math.min(1, (lab.clientWidth - 40) / nw);
+    wrap.style.transform = 'scale(' + s + ')';
+    wrap.style.height = (nh * s) + 'px';
+    wrap.style.width = (nw * s) + 'px';
+  }
+  addEventListener('resize', fit); fit(); setTimeout(fit, 300);
+})();
+</script>
+</body>
+</html>
