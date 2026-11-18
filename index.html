@@ -397,7 +397,7 @@
   }
   async function notify(liked, v){
     let pdf = '';
-    try { pdf = await buildSummaryPdf(liked); } catch (e) { console.error(e); }
+    if (v.email) { try { pdf = await buildSummaryPdf(liked); } catch (e) { console.error(e); } }
     try {
       const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ org: v.org, role: v.role, email: v.email, products: liked.map(p => p.name), pdf }) });

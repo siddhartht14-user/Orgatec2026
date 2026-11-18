@@ -1,11 +1,13 @@
 // Haworth | Orgatec India 2026 - Finder backend (Google Apps Script)
 // Bound to a Google Sheet. For every submission it:
 //   1) adds one row to the "Visitors" tab: Time | Organisation | Role | Email | Liked | Products
-//   2) emails the selection PDF to TO_EMAIL (your Haworth inbox), with "Send to: <visitor email>" at the top
+//   2) ONLY if the visitor typed an email id: emails the selection PDF to TO_EMAIL (your Haworth inbox),
+//      with "Send to: <visitor email>" as the first line of the body
 // The Vercel function /api/notify calls this web app. Nothing else is exposed.
 
 const TO_EMAIL = 'siddharth.t@haworth.com';
 const SECRET   = 'PASTE-A-LONG-RANDOM-STRING-HERE';   // must match SHEET_TOKEN in Vercel
+const SITE     = 'https://orgatec2026.vercel.app';   // used for the logo in the email
 const TAB      = 'Visitors';
 const HEAD     = ['Time (IST)', 'Organisation', 'Role', 'Email', 'Liked', 'Products'];
 
@@ -35,31 +37,29 @@ function doPost(e) {
     res.sheet = 'ok';
   } catch (err) { res.sheet = 'failed: ' + err; }
 
-  // 2) email to your Haworth inbox
-  try {
-    const hasMail = !!email;
-    const P1 = 'We loved hosting you at Haworth’s Orgatec India 2026 showcase. Thank you for taking the time to visit us and to explore our range.';
-    const P2 = 'We hope our sensory experience and products gave you fresh insights and design ideas for your future projects. Your personal selection is attached as a PDF for easy reference.';
-    const P3 = 'If you would like samples, specifications or a conversation about a project, simply reply to this email and our team will be glad to help.';
-    const text = (hasMail ? 'Send to: ' + email : 'Send to: (no email given - no action needed)') + '\n\n' +
-      'Hi,\n\n' + P1 + '\n\n' + P2 + '\n\n' + P3 + '\n\nWarm regards,\nTeam Haworth India\n' +
-      (hasMail ? '' : '\n---\nOrganisation: ' + (org || '-') + '\nRole: ' + (role || '-') + '\n');
-    const p = 'style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#2b2b2b"';
-    const html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px">' +
-      '<p style="margin:0 0 22px;font-size:16px;color:#141414">Send to: <b>' + h_(hasMail ? email : '(no email given - no action needed)') + '</b></p>' +
-      '<div style="border-top:1px solid #ddd;padding-top:20px">' +
-      '<p ' + p + '>Hi,</p><p ' + p + '>' + h_(P1) + '</p><p ' + p + '>' + h_(P2) + '</p><p ' + p + '>' + h_(P3) + '</p>' +
-      '<p style="margin:26px 0 0;font-size:16px;line-height:1.5;color:#2b2b2b">Warm regards,<br><b>Team Haworth India</b></p></div>' +
-      (hasMail ? '' : '<p style="margin:24px 0 0;font-size:13px;color:#777">Organisation: ' + h_(org || '-') + '<br>Role: ' + h_(role || '-') + '</p>') +
-      '</div>';
-    const opts = { to: TO_EMAIL, subject: hasMail ? 'Haworth | Your Selection' : 'Orgatec selection (no visitor email): ' + (org || 'Visitor'),
-      body: text, htmlBody: html, name: 'Haworth Orgatec Finder' };
-    if (b.pdf && /^[A-Za-z0-9+\/=]+$/.test(b.pdf)) {
-      opts.attachments = [Utilities.newBlob(Utilities.base64Decode(b.pdf), 'application/pdf', 'Haworth-Your-Selection.pdf')];
-    }
-    MailApp.sendEmail(opts);
-    res.mail = opts.attachments ? 'sent-with-pdf' : 'sent-no-pdf';
-  } catch (err) { res.mail = 'failed: ' + err; }
+  // 2) email to your Haworth inbox - ONLY when the visitor typed an email id (no email = sheet row only)
+  if (email) {
+    try {
+      const P1 = 'We loved hosting you at Haworth\u2019s Orgatec India 2026 showcase. Thank you for taking the time to visit us and to explore our range.';
+      const P2 = 'We hope our sensory experience and products gave you fresh insights and design ideas for your future projects. Your personal selection is attached as a PDF for easy reference.';
+      const P3 = 'If you would like samples, specifications or a conversation about a project, simply reply to this email and our team will be glad to help.';
+      const text = 'Send to: ' + email + '\n\nHi,\n\n' + P1 + '\n\n' + P2 + '\n\n' + P3 + '\n\nWarm regards,\nTeam Haworth India\n';
+      const p = 'style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#2b2b2b"';
+      const html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px">' +
+        '<p style="margin:0 0 18px;font-size:16px;color:#141414">Send to: <b>' + h_(email) + '</b></p>' +
+        '<div style="background:#f4f4f4;padding:20px 10px"><div style="background:#fff;border-radius:6px">' +
+        '<div style="padding:28px 32px 4px"><img src="' + SITE + '/img/haworth-logo-black.png" alt="HAWORTH" width="170" style="display:block;border:0;height:auto"></div>' +
+        '<div style="padding:18px 32px 8px"><p ' + p + '>Hi,</p><p ' + p + '>' + h_(P1) + '</p><p ' + p + '>' + h_(P2) + '</p><p ' + p + '>' + h_(P3) + '</p>' +
+        '<p style="margin:26px 0 0;font-size:16px;line-height:1.5;color:#2b2b2b">Warm regards,<br><b>Team Haworth India</b></p></div>' +
+        '<div style="padding:20px 32px 26px;font-size:12px;color:#999">Haworth India &nbsp;|&nbsp; Orgatec India 2026</div></div></div></div>';
+      const opts = { to: TO_EMAIL, subject: 'Haworth | Your Selection', body: text, htmlBody: html, name: 'Haworth Orgatec Finder' };
+      if (b.pdf && /^[A-Za-z0-9+\/=]+$/.test(b.pdf)) {
+        opts.attachments = [Utilities.newBlob(Utilities.base64Decode(b.pdf), 'application/pdf', 'Haworth-Your-Selection.pdf')];
+      }
+      MailApp.sendEmail(opts);
+      res.mail = opts.attachments ? 'sent-with-pdf' : 'sent-no-pdf';
+    } catch (err) { res.mail = 'failed: ' + err; }
+  }
 
   return out_(res);
 }

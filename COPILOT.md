@@ -1,53 +1,54 @@
-# Auto-forward the selection PDF to the visitor (Power Automate, described to Copilot)
+# Power Automate flow: send the selection PDF to the visitor
 
-Outlook's Copilot cannot act on its own when mail arrives. Power Automate can, and it has its own Copilot box
-("Describe it to design it") where you paste the prompt below. Open make.powerautomate.com, sign in with your
-Haworth account, then Create > "Describe it to design it" (or "Start with Copilot").
+How it finds the visitor's email id: the app puts it on the FIRST line of the email body as
+`Send to: name@company.com`. The flow reads that line, and sends a fresh email from your Haworth mailbox
+to that address with the PDF the app attached.
 
-## Prompt to paste
+How the "rule" works: the trigger filters are the rule. Only mail that arrives in your Inbox from the sender
+below with the subject "Haworth | Your Selection" and an attachment starts the flow. Submissions with no email id
+never send any email (they only go to the Google Sheet), so nothing else can trigger it.
+
+## Prompt to paste (make.powerautomate.com > Create > Describe it to design it)
 
 Create an automated cloud flow for my Haworth Outlook mailbox.
 
-Trigger: "When a new email arrives (V3)" in my Inbox, with Subject Filter "Haworth | Your Selection", From set to
-siddhartht14@gmail.com, Only with Attachments = Yes, Include Attachments = Yes.
+Trigger: "When a new email arrives (V3)", Folder Inbox, From = siddhartht14@gmail.com, Subject Filter = "Haworth | Your Selection",
+Only with Attachments = Yes, Include Attachments = Yes.
 
-Step 1: Compose, named "VisitorEmail". Read the visitor's email id from the line that says "Send to:" at the top of the
-email body. Use this expression:
+Step 1: Compose, named VisitorEmail, with this expression (it reads the address after "Send to:" in the email body):
 trim(first(split(replace(replace(last(split(triggerOutputs()?['body/bodyPreview'],'Send to: ')),decodeUriComponent('%0D'),' '),decodeUriComponent('%0A'),' '),' ')))
 
-Step 2: Condition. Continue only if VisitorEmail contains "@". If it does not, do nothing.
+Step 2: Condition. If VisitorEmail contains "@" go to the Yes branch, otherwise do nothing.
 
-Step 3 (Yes branch): "Send an email (V2)" from my mailbox.
+Step 3, Yes branch: "Send an email (V2)" from my mailbox.
 - To: VisitorEmail
 - Subject: Haworth | Your Selection
-- Body (HTML): copy everything in the original email body that comes AFTER the "Send to:" line, from "Hi," through
-  "Team Haworth India". Do not include the "Send to:" line.
-- Attachments: the PDF attachment from the trigger email (use the Attachments Name and Attachments Content from the trigger).
-- Importance: Normal.
+- Is HTML: Yes
+- Body: the HTML below
+- Attachments: for each attachment of the trigger email, Name = Attachments Name, Content = Attachments Content (the PDF)
 
-Step 4: Move the original email to a folder called "Orgatec Sent" so my Inbox stays clean.
+Step 4: Move the trigger email to a folder called "Orgatec Sent".
 
-Add a Scope around steps 1 to 4 and, if anything fails, send me an email saying "Orgatec auto-send failed for
-" followed by the Subject, so I can send it by hand.
+Put steps 1 to 4 in a Scope. If the Scope fails, send me an email: subject "Orgatec auto-send failed", body = the subject of the trigger email and VisitorEmail.
 
-## Body text the flow should send (use this if Copilot does not copy it cleanly)
+Body HTML for step 3:
 
-Hi,
+<div style="background:#f4f4f4;padding:24px 10px;font-family:Arial,Helvetica,sans-serif"><div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:6px">
+<div style="padding:28px 32px 4px"><img src="https://orgatec2026.vercel.app/img/haworth-logo-black.png" alt="HAWORTH" width="170" style="display:block;border:0;height:auto"></div>
+<div style="padding:18px 32px 8px;font-size:16px;line-height:1.6;color:#2b2b2b">
+<p style="margin:0 0 16px">Hi,</p>
+<p style="margin:0 0 16px">We loved hosting you at Haworth’s Orgatec India 2026 showcase. Thank you for taking the time to visit us and to explore our range.</p>
+<p style="margin:0 0 16px">We hope our sensory experience and products gave you fresh insights and design ideas for your future projects. Your personal selection is attached as a PDF for easy reference.</p>
+<p style="margin:0 0 16px">If you would like samples, specifications or a conversation about a project, simply reply to this email and our team will be glad to help.</p>
+<p style="margin:26px 0 0">Warm regards,<br><b>Team Haworth India</b></p></div>
+<div style="padding:20px 32px 26px;font-size:12px;color:#999999">Haworth India &nbsp;|&nbsp; Orgatec India 2026</div></div></div>
 
-We loved hosting you at Haworth's Orgatec India 2026 showcase. Thank you for taking the time to visit us and to explore our range.
+## If the expression fails
 
-We hope our sensory experience and products gave you fresh insights and design ideas for your future projects. Your personal selection is attached as a PDF for easy reference.
+Open a run in the flow history, look at the output of the trigger, and check that "bodyPreview" starts with "Send to: ".
+If Haworth IT blocks flows from emailing external addresses, ask them to allow "Send an email (V2)" to external recipients.
 
-If you would like samples, specifications or a conversation about a project, simply reply to this email and our team will be glad to help.
+## Test
 
-Warm regards,
-Team Haworth India
-
-## Test before the show
-
-1. Run the app once with your own personal email id and check the flow forwards it.
-2. Check the visitor copy lands in the inbox (not spam), with the PDF attached.
-3. Entries with no email id arrive with the subject "Orgatec selection (no visitor email): ..." and the flow ignores them.
-
-If Haworth IT blocks external recipients from flows, ask for the "Send an email (V2)" action to be allowed for
-external addresses; the rest of the flow stays inside Haworth.
+Complete the app once with your own personal email id. You should get the email in the Haworth inbox, then a minute
+later the visitor copy at your personal address with the PDF attached. Check spam.
