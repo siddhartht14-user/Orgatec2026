@@ -129,12 +129,32 @@
 
   /* ---- tablet / desktop: keep the phone-shaped card, centred, so crops stay as designed ---- */
   @media (min-width:700px){
-    html,body{background:#0b0b0b}
-    #app{width:min(100%,560px,calc((100dvh - 230px) / 1.25));margin:0 auto;background:#141414;box-shadow:0 0 70px rgba(0,0,0,.65)}
-    #app{height:100vh;height:100dvh}
-    .actions{padding:12px 20px 18px}
-    .dscroll{padding:6px 22px 12px}.dfoot{padding:8px 22px 18px}
-    .grid{grid-template-columns:repeat(3,1fr)}
+    /* iPad / tablet: full-bleed, edge to edge */
+    header{padding:18px 0 14px}
+    .logo{height:26px}
+    .meta{padding:16px 24px 8px}
+    .meta h2{font-size:34px}
+    .meta p{font-size:21px}
+    .stamp{font-size:44px;top:34px;padding:6px 22px}
+    .stamp.yeah{left:34px}.stamp.nah{right:34px}
+    .actions{padding:14px 40px 26px;gap:16px}
+    .btn{font-size:22px;padding:12px 34px;min-height:56px}
+    .count{font-size:21px}
+    .dscroll{padding:10px 36px 14px}.dfoot{padding:10px 36px 24px;flex-direction:row}
+    .dfoot .btn{flex:1}
+    .dfoot .toast{display:none}
+    #done h2{font-size:34px}
+    .grid{grid-template-columns:repeat(4,1fr);gap:16px}
+    .tile{font-size:15px}
+  }
+  @media (min-width:700px) and (orientation:landscape){
+    /* landscape: photo runs edge to edge, details float over a soft fade at the bottom */
+    .photo{position:absolute;inset:0;flex:none}
+    .meta{position:absolute;left:0;right:0;bottom:0;padding:90px 40px 22px;
+      background:linear-gradient(to top,rgba(10,10,10,.88),rgba(10,10,10,.55) 55%,rgba(10,10,10,0))}
+    .meta h2{font-size:38px}
+    .hint{bottom:auto;top:12px}
+    .grid{grid-template-columns:repeat(5,1fr)}
   }
 </style>
 </head>
