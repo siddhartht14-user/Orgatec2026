@@ -397,10 +397,10 @@
   }
   async function notify(liked, v){
     let pdf = '';
-    if (v.email) { try { pdf = await buildSummaryPdf(liked); } catch (e) { console.error(e); } }
+    try { pdf = await buildSummaryPdf(liked); } catch (e) { console.error(e); }
     try {
       const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: P.length, count: liked.length, org: v.org, role: v.role, email: v.email, pdf }) });
+        body: JSON.stringify({ org: v.org, role: v.role, email: v.email, products: liked.map(p => p.name), pdf }) });
       return r.ok;
     } catch (e) { return false; }
   }
