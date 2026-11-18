@@ -117,6 +117,7 @@
   .inpill.stock{color:#e7fbfc;background:linear-gradient(135deg,rgba(70,200,210,.17),rgba(70,200,210,.05));border-color:rgba(150,228,234,.42)}
   .inpill.stock.dark{color:#2f3a3b;background:linear-gradient(135deg,rgba(70,200,210,.26),rgba(70,200,210,.09));border-color:rgba(40,110,115,.32)}
   .inpill.dark::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent)}
+  .meta p.n{color:#ffb15c;font-weight:400}
   .tag{font-weight:500}.tag.in{color:#ffb15c}.tag.qs{color:#8fd3d9}
   .sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-size:15px;font-weight:500}
   .sec small{font-weight:300;color:#aaa;font-size:13px}
@@ -175,13 +176,14 @@
     const c = document.createElement('div');
     c.className = 'card' + (back ? ' back' : '');
     c.innerHTML = '<div class="photo"><img alt="" draggable="false"><span class="stamp yeah">YEAH</span><span class="stamp nah">NAH</span></div>' +
-      '<div class="meta"><h2></h2><p class="b"></p><p class="d"></p></div>';
+      '<div class="meta"><h2></h2><p class="b"></p><p class="d"></p><p class="n"></p></div>';
     c.querySelector('img').src = p.image;
     c.querySelector('h2').textContent = p.name;
     const pillKind = isIndia(p) ? ['', 'MADE IN INDIA'] : (/quickship/i.test(p.brand || '') ? ['stock', 'STOCKED IN INDIA'] : null);
     if (pillKind) c.querySelector('.photo').insertAdjacentHTML('beforeend', '<span class="inpill ' + pillKind[0] + (p.light ? ' dark' : '') + '"><i class="flag"></i>' + pillKind[1] + '</span>');
     setBrand(c.querySelector('.b'), p.brand);
     const d = c.querySelector('.d'); if (p.designer) d.textContent = 'Designed by ' + p.designer; else d.remove();
+    const nn = c.querySelector('.n'); if (p.note) nn.textContent = p.note; else nn.remove();
     if (p.focus) c.querySelector('img').style.objectPosition = p.focus;
     return c;
   }
@@ -244,7 +246,7 @@
   async function notify(liked){
     try {
       const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: P.length, selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '', india: isIndia(p) })) }) });
+        body: JSON.stringify({ total: P.length, selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '', note: p.note || '', india: isIndia(p) })) }) });
       return r.ok;
     } catch (e) { return false; }
   }
@@ -294,6 +296,7 @@
         doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110, 110, 110);
         doc.text(doc.splitTextToSize(p.brand, cw)[0], x, y + ih + 10);
         if (p.designer) doc.text(doc.splitTextToSize('Designed by ' + p.designer, cw)[0], x, y + ih + 14.5);
+        if (p.note) doc.text(doc.splitTextToSize(p.note, cw)[0], x, y + ih + (p.designer ? 19 : 14.5));
         if (++col === COLS) { col = 0; y += pitch; }
       });
       if (col !== 0) { col = 0; y += pitch; }

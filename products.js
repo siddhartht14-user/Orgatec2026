@@ -28,5 +28,9 @@ window.PRODUCTS = [
   { name: "Poppy Lounge", brand: "Haworth", designer: "Patricia Urquiola", image: "img/poppy-lounge-2.jpg" },
   { name: "Poppy 4 Star", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-4-star.jpg", light: true },
   { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg", light: true },
-  { name: "HushFree M", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-m.jpg", focus: "90% 50%", light: true }
+  { name: "HushFree M", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-m.jpg", focus: "90% 50%", light: true },
+  { name: "Fern Digital Knit", brand: "Haworth | Made in India", designer: "", image: "img/fern-digital-knit.jpg", focus: "49% 50%", light: true },
+  { name: "Zody LX", brand: "Haworth | Made in India", designer: "ITO Design", image: "img/zody-lx.jpg", focus: "33% 50%", light: true },
+  { name: "Aloha Pro", brand: "Haworth | Made in India", designer: "", note: "Bio Mass Foam", image: "img/aloha-pro.jpg" },
+  { name: "Soji", brand: "Haworth | Made in India", designer: "", image: "img/soji.jpg", light: true }
 ];
