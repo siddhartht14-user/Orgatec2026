@@ -8,7 +8,7 @@ window.PRODUCTS = [
   { name: "BuzziVault",     brand: "BuzziSpace", designer: "Alain Giles",        image: "img/buzzivault.jpg", focus: "50% 14%" },
   { name: "BuzziNest Office", brand: "HushOffice", designer: "",                  image: "img/buzzinest-office.jpg" },
   { name: "BuzziPleat",     brand: "BuzziSpace", designer: "13&9 Design",        image: "img/buzzipleat.jpg" },
-  { name: "Cardigan Lounge", brand: "Haworth",   designer: "Patricia Urquiola",  image: "img/cardigan-lounge.jpg" },
+  { name: "Cardigan Lounge", brand: "Haworth",   designer: "Patricia Urquiola",  image: "img/cardigan-lounge.jpg", focus: "50% 75%" },
   { name: "Mush",           brand: "Cappellini", designer: "Giulio Cappellini",  image: "img/cappellini-mush.jpg" },
   { name: "Orla",           brand: "Cappellini", designer: "Jasper Morrison",    image: "img/orla.jpg", focus: "76% 50%" },
   { name: "Your Place Echo", brand: "Haworth",   designer: "",                   image: "img/yp-echo.jpg" },
