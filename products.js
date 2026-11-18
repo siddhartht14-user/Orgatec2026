@@ -11,5 +11,13 @@ window.PRODUCTS = [
   { name: "Cardigan Lounge", brand: "Haworth",   designer: "Patricia Urquiola",  image: "img/cardigan-lounge.jpg" },
   { name: "Mush",           brand: "Cappellini", designer: "Giulio Cappellini",  image: "img/cappellini-mush.jpg" },
   { name: "Orla",           brand: "Cappellini", designer: "Jasper Morrison",    image: "img/orla.jpg", focus: "76% 50%" },
-  { name: "Your Place Echo", brand: "Haworth",   designer: "",                   image: "img/yp-echo.jpg" }
+  { name: "Your Place Echo", brand: "Haworth",   designer: "",                   image: "img/yp-echo.jpg" },
+  { name: "BuzziShade", brand: "BuzziSpace", designer: "Stal Collectief", image: "img/buzzishade.jpg" },
+  { name: "Collaborate Cart", brand: "Haworth", designer: "", image: "img/collaborate-cart.jpg" },
+  { name: "Cabana", brand: "Haworth", designer: "Patricia Urquiola", image: "img/cabana.jpg" },
+  { name: "Chic Pouf", brand: "Haworth", designer: "Patricia Urquiola", image: "img/chic-pouf.jpg" },
+  { name: "Poppy Tablet", brand: "Haworth", designer: "Patricia Urquiola", image: "img/poppy-tablet.jpg" },
+  { name: "BuzziPlanter", brand: "BuzziSpace", designer: "", image: "img/buzziplanter.jpg" },
+  { name: "Hi Pad Stool", brand: "Cappellini", designer: "Jasper Morrison", image: "img/hi-pad-stool.jpg" },
+  { name: "Crystal Rug", brand: "GAN", designer: "", image: "img/crystal-rug.jpg" }
 ];
