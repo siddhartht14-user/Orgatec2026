@@ -31,5 +31,5 @@ window.PRODUCTS = [
   { name: "Fern Digital Knit", brand: "Haworth | Made in India", designer: "", image: "img/fern-digital-knit.jpg", focus: "49% 50%", light: true },
   { name: "Zody LX", brand: "Haworth | Made in India", designer: "ITO Design", image: "img/zody-lx.jpg", focus: "33% 50%", light: true },
   { name: "Aloha Pro", brand: "Haworth | Made in India", designer: "", note: "Bio Mass Foam", image: "img/aloha-pro.jpg" },
-  { name: "Soji", brand: "Haworth | Made in India", designer: "", image: "img/soji.jpg", focus: "50% 100%", light: true }
+  { name: "Soji", brand: "Haworth | Made in India", designer: "", image: "img/soji.jpg", light: true }
 ];
