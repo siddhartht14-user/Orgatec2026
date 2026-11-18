@@ -22,5 +22,6 @@ window.PRODUCTS = [
   { name: "Crystal Rug", brand: "GAN", designer: "", image: "img/crystal-rug.jpg" },
   { name: "HushFree XM | 2 Pax", brand: "HushOffice", designer: "", image: "img/hushfree-xm.jpg" },
   { name: "HushFree S Hybrid", brand: "HushOffice", designer: "", image: "img/hushfree-s-hybrid.jpg" },
-  { name: "HushFree M Access", brand: "HushOffice", designer: "", image: "img/hushfree-m-access.jpg" }
+  { name: "HushFree M Access", brand: "HushOffice", designer: "", image: "img/hushfree-m-access.jpg" },
+  { name: "Belong Monitor Arm", brand: "Haworth", designer: "", image: "img/belong-monitor-arm.jpg", focus: "35% 50%" }
 ];
