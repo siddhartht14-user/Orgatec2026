@@ -7,7 +7,7 @@ window.PRODUCTS = [
   { name: "BuzziVault",     brand: "BuzziSpace", designer: "Alain Giles",        image: "img/buzzivault.jpg", focus: "50% 14%" },
   { name: "BuzziNest Office", brand: "HushOffice", designer: "",                  image: "img/buzzinest-office.jpg" },
   { name: "BuzziPleat",     brand: "BuzziSpace | Made in India", designer: "13&9 Design",        image: "img/buzzipleat.jpg" },
-  { name: "Cardigan Lounge", brand: "Haworth",   designer: "Patricia Urquiola",  image: "img/cardigan-lounge.jpg", focus: "50% 75%" },
+  { name: "Cardigan Lounge", brand: "Haworth",   designer: "Patricia Urquiola",  image: "img/cardigan-lounge.jpg", focus: "50% 85%" },
   { name: "Mush",           brand: "Cappellini", designer: "Giulio Cappellini",  image: "img/cappellini-mush.jpg" },
   { name: "Orla",           brand: "Cappellini", designer: "Jasper Morrison",    image: "img/orla.jpg", focus: "76% 50%" },
   { name: "Your Place Echo", brand: "Haworth",   designer: "",                   image: "img/yp-echo.jpg" },
@@ -29,7 +29,7 @@ window.PRODUCTS = [
   { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg", light: true },
   { name: "HushFree M", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-m.jpg", focus: "90% 50%", light: true },
   { name: "Fern Digital Knit", brand: "Haworth | Made in India", designer: "", image: "img/fern-digital-knit.jpg", focus: "49% 50%", light: true },
-  { name: "Zody LX", brand: "Haworth | Made in India", designer: "ITO Design", image: "img/zody-lx.jpg", focus: "33% 50%", light: true },
+  { name: "Zody LX", brand: "Haworth | Made in India", designer: "ITO Design", image: "img/zody-lx.jpg", focus: "28% 50%", light: true },
   { name: "Aloha Pro", brand: "Haworth | Made in India", designer: "", note: "Bio Mass Foam", image: "img/aloha-pro.jpg" },
-  { name: "Soji", brand: "Haworth | Made in India", designer: "", image: "img/soji.jpg", light: true }
+  { name: "Soji", brand: "Haworth | Made in India", designer: "", image: "img/soji.jpg", focus: "50% 90%", light: true }
 ];

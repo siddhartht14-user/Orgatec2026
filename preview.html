@@ -30,6 +30,9 @@
   .ipbar .url{flex:1;max-width:520px;margin:0 auto;height:34px;border-radius:10px;background:#2c2c2e;display:flex;align-items:center;justify-content:center;font-size:14px;color:#e5e5e7}
   .ipbar .ub span.g{width:22px;text-align:center}
   .iphome{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);width:160px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);z-index:4}
+  .ipbar .tabstrip{display:flex;gap:6px;height:52px;align-items:center;padding:0 14px;font-size:13px;color:#cfcfd2}
+  .ipbar .tabstrip span{flex:1;text-align:center;background:#232325;border-radius:10px;padding:9px 6px}
+  .ipbar .tabstrip span.on{background:#3a3a3d;color:#fff}
   .ipbot{position:absolute;left:0;right:0;bottom:0;height:20px;background:#141414;z-index:3}
   #row{display:flex;gap:56px;align-items:flex-start;width:max-content}
   .dev .label{font-size:13px;color:#bbb;margin:0 0 4px;text-align:center}
@@ -116,13 +119,14 @@ addEventListener('message', async function(e){
   ];
   const row2 = document.getElementById('row2');
   pads.forEach(d => {
-    const top = 74, bottom = 20, vh = d.H - top - bottom;
+    const top = 126, bottom = 0, vh = d.H - top - bottom; /* matches a real iPad Safari: status 24 + toolbar 50 + tab strip 52 */
     const el = document.createElement('div'); el.className = 'dev';
     el.innerHTML = '<p class="label">'+d.label+'<small>'+d.sub+'</small></p>' +
       '<div class="pad" style="border-radius:'+(d.r+d.bezel)+'px;padding:'+d.bezel+'px"><div class="screen" style="width:'+d.W+'px;height:'+d.H+'px;border-radius:'+d.r+'px">' +
       '<div class="ipbar"><div class="sb"><span>9:41 &nbsp; Wed 18 Nov</span><span>\u25b2 &nbsp;100% \u25ae</span></div>' +
-      '<div class="ub"><span class="g">\u2039</span><span class="g">\u203a</span><div class="url">\ud83d\udd12&nbsp; haworth.claude.ai</div><span class="g">\u2b06</span><span class="g">+</span></div></div>' +
-      '<div class="ipbot"></div><div class="iphome"></div>' +
+      '<div class="ub"><span class="g">\u2039</span><span class="g">\u203a</span><div class="url">\ud83d\udd12&nbsp; finder.vazha.space</div><span class="g">\u2b06</span><span class="g">+</span></div>' +
+      '<div class="tabstrip"><span>Google</span><span>OneTM</span><span>BuzziSp\u2026</span><span class="on">Haworth\u2026</span></div></div>' +
+      '<div class="iphome"></div>' +
       '<iframe src="index.html" title="'+d.label+'" style="top:'+top+'px;height:'+vh+'px"></iframe></div></div>';
     row2.appendChild(el);
   });
