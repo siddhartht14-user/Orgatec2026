@@ -38,19 +38,31 @@ module.exports = async (req, res) => {
     (who.length ? '<table style="border-collapse:collapse;margin:10px 0 0;font-size:15px">' + who.map(x => '<tr><td style="padding:3px 14px 3px 0;color:#999">' + esc(x[0]) + '</td><td style="padding:3px 0"><b style="font-weight:500">' + esc(x[1]) + '</b></td></tr>').join('') + '</table>' : '') +
     hsec('India made products | BIS', india, '#d9780a') + hsec('All other products', other, '#141414') + '</div>';
 
+  const FROM = process.env.RESEND_FROM || 'Haworth Selector <onboarding@resend.dev>';
+  const send = payload => fetch('https://api.resend.com/emails', {
+    method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM || 'Haworth Selector <onboarding@resend.dev>',
-        to: [process.env.NOTIFY_TO || 'siddhartht14@gmail.com'],
-        subject, html, text,
-        ...(email ? { reply_to: email } : {})
-      })
-    });
+    // 1) internal notification to the team inbox (always)
+    const r = await send({ from: FROM, to: [process.env.NOTIFY_TO || 'siddhartht14@gmail.com'], subject, html, text, ...(email ? { reply_to: email } : {}) });
     if (!r.ok) return res.status(502).json({ ok: false, error: 'resend-' + r.status });
-    return res.status(200).json({ ok: true });
+
+    // 2) a copy of the summary to the visitor. Needs a verified sender domain in Resend (set RESEND_FROM);
+    //    with the default onboarding sender Resend only delivers to the account owner, so this is skipped.
+    let visitor = 'skipped';
+    if (email && process.env.RESEND_FROM) {
+      const vhtml = '<div style="font-family:Arial,Helvetica,sans-serif;color:#141414;max-width:520px">' +
+        '<h2 style="margin:0 0 4px;font-weight:500">Your Haworth product selection</h2>' +
+        '<p style="margin:0 0 4px;color:#666;font-size:14px">Thank you for visiting us at Orgatec India. You liked ' + items.length + ' of ' + total + ' products.</p>' +
+        hsec('India made products | BIS', india, '#d9780a') + hsec('All other products', other, '#141414') +
+        '<p style="margin:24px 0 0;color:#666;font-size:13px">Reply to this email and our team will get back to you.</p></div>';
+      const vtext = 'Your Haworth product selection\nYou liked ' + items.length + ' of ' + total + ' products.\n\n' +
+        sec('INDIA MADE PRODUCTS | BIS', india) + sec('ALL OTHER PRODUCTS', other);
+      try {
+        const v = await send({ from: FROM, to: [email], subject: 'Your Haworth product selection', html: vhtml, text: vtext, reply_to: process.env.NOTIFY_TO || 'siddhartht14@gmail.com' });
+        visitor = v.ok ? 'sent' : 'failed-' + v.status;
+      } catch (_) { visitor = 'failed'; }
+    }
+    return res.status(200).json({ ok: true, visitor });
   } catch (e) {
     return res.status(502).json({ ok: false, error: 'network' });
   }
