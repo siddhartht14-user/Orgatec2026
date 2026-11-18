@@ -226,16 +226,15 @@
     section('All other products', otherItems, 'oth');
     if (!liked.length) holder.insertAdjacentHTML('beforeend', '<p class="sub">Nothing yet. Try again?</p>');
     const foot = done.querySelector('.dfoot'), toast = done.querySelector('#toast');
+    if (liked.length) notify(liked); // email the selection as soon as the shortlist is complete (silent, once per completion)
     const pdf = document.createElement('button'); pdf.className = 'btn pdf'; pdf.textContent = 'Download selection as PDF';
     pdf.onclick = async () => {
       if (!liked.length) { toast.textContent = 'Swipe Yeah on a few products first.'; return; }
       pdf.textContent = 'Preparing PDF…'; pdf.disabled = true; toast.textContent = '';
       try {
-        const mail = notify(liked);
         const blob = await buildPdf(liked);
         const how = await savePdf(blob, 'Haworth-selection-' + new Date().toISOString().slice(0, 10) + '.pdf');
-        const sent = await mail;
-        toast.textContent = (how === 'cancelled' ? 'Download cancelled.' : 'PDF ready.') + (sent ? ' Email sent.' : ' Email not sent.');
+        toast.textContent = how === 'cancelled' ? 'Download cancelled.' : 'PDF ready.';
       } catch (err) { toast.textContent = 'Couldn’t create the PDF. Try again.'; console.error(err); }
       pdf.textContent = 'Download selection as PDF'; pdf.disabled = false;
     };
