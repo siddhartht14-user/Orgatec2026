@@ -21,5 +21,6 @@ window.PRODUCTS = [
   { name: "Hi Pad Stool", brand: "Cappellini", designer: "Jasper Morrison", image: "img/hi-pad-stool.jpg" },
   { name: "Crystal Rug", brand: "GAN", designer: "", image: "img/crystal-rug.jpg" },
   { name: "HushFree XM | 2 Pax", brand: "HushOffice", designer: "", image: "img/hushfree-xm.jpg" },
-  { name: "HushFree S Hybrid", brand: "HushOffice", designer: "", image: "img/hushfree-s-hybrid.jpg" }
+  { name: "HushFree S Hybrid", brand: "HushOffice", designer: "", image: "img/hushfree-s-hybrid.jpg" },
+  { name: "HushFree M Access", brand: "HushOffice", designer: "", image: "img/hushfree-m-access.jpg" }
 ];
