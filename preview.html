@@ -19,7 +19,18 @@
   h1{font-size:18px;font-weight:600;margin:0 0 4px;color:#fff}
   .note{font-size:13px;color:#999;margin:0 0 18px;max-width:900px;line-height:1.5}
   .note b{color:#ccc;font-weight:500}
-  #wrap{transform-origin:top left}
+  #wrap,#wrap2{transform-origin:top left}
+  #tabs{display:flex;gap:8px;margin:0 0 18px}
+  #tabs button{font:500 13px system-ui,sans-serif;color:#bbb;background:#1c1c1e;border:1px solid #3a3a3c;border-radius:999px;padding:8px 18px;cursor:pointer}
+  #tabs button.on{color:#fff;background:#2c2c2e;border-color:#6a6a6e}
+  .pad{background:#050505;border:2px solid #3a3a3c;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+  .ipbar{position:absolute;left:0;right:0;top:0;background:#1a1a1c;z-index:4;color:#fff}
+  .ipbar .sb{display:flex;justify-content:space-between;padding:6px 26px 0;font-size:13px;font-weight:600;height:24px}
+  .ipbar .ub{display:flex;align-items:center;gap:14px;padding:0 18px;height:50px;color:#c9c9cc;font-size:18px}
+  .ipbar .url{flex:1;max-width:520px;margin:0 auto;height:34px;border-radius:10px;background:#2c2c2e;display:flex;align-items:center;justify-content:center;font-size:14px;color:#e5e5e7}
+  .ipbar .ub span.g{width:22px;text-align:center}
+  .iphome{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);width:160px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);z-index:4}
+  .ipbot{position:absolute;left:0;right:0;bottom:0;height:20px;background:#141414;z-index:3}
   #row{display:flex;gap:56px;align-items:flex-start;width:max-content}
   .dev .label{font-size:13px;color:#bbb;margin:0 0 4px;text-align:center}
   .dev .label small{display:block;color:#777;font-size:11px}
@@ -52,7 +63,9 @@
   <h1>Haworth Product Selector – device preview</h1>
   <p class="note">Each frame is a live, working copy of the app at that phone’s real CSS viewport, with the browser toolbars drawn at their approximate size so you can judge the space you actually get.
   <b>Drag the cards</b> (or use the Nah / Yeah buttons, or ← → keys). To test on real hardware, open this same link on the phone: it switches to full-screen app mode automatically.</p>
+  <div id="tabs"><button data-t="phones" class="on">Phones</button><button data-t="ipad">iPad</button></div>
   <div id="wrap"><div id="row"></div></div>
+  <div id="wrap2" style="display:none"><div id="row2" style="display:flex;gap:56px;align-items:flex-start;width:max-content"></div></div>
 </div>
 
 <script>
@@ -98,16 +111,46 @@ addEventListener('message', async function(e){
     row.appendChild(el);
   });
 
+  const pads = [
+    { label:'iPad Pro 11\u2033 \u2013 portrait', sub:'Safari \u00b7 834 \u00d7 1194', W:834, H:1194, bezel:18, r:34 },
+    { label:'iPad Pro 11\u2033 \u2013 landscape', sub:'Safari \u00b7 1194 \u00d7 834', W:1194, H:834, bezel:18, r:34 }
+  ];
+  const row2 = document.getElementById('row2');
+  pads.forEach(d => {
+    const top = 74, bottom = 20, vh = d.H - top - bottom;
+    const el = document.createElement('div'); el.className = 'dev';
+    el.innerHTML = '<p class="label">'+d.label+'<small>'+d.sub+'</small></p>' +
+      '<div class="pad" style="border-radius:'+(d.r+d.bezel)+'px;padding:'+d.bezel+'px"><div class="screen" style="width:'+d.W+'px;height:'+d.H+'px;border-radius:'+d.r+'px">' +
+      '<div class="ipbar"><div class="sb"><span>9:41 &nbsp; Wed 18 Nov</span><span>\u25b2 &nbsp;100% \u25ae</span></div>' +
+      '<div class="ub"><span class="g">\u2039</span><span class="g">\u203a</span><div class="url">\ud83d\udd12&nbsp; haworth.claude.ai</div><span class="g">\u2b06</span><span class="g">+</span></div></div>' +
+      '<div class="ipbot"></div><div class="iphome"></div>' +
+      '<iframe src="index.html" title="'+d.label+'" style="top:'+top+'px;height:'+vh+'px"></iframe></div></div>';
+    row2.appendChild(el);
+  });
+
+  let tab = (location.hash === '#ipad') ? 'ipad' : 'phones';
   function fit(){
-    const wrap = document.getElementById('wrap'), lab = document.getElementById('lab');
-    wrap.style.transform = 'none';
-    const nw = row.offsetWidth, nh = row.offsetHeight;
-    const s = Math.min(1, (lab.clientWidth - 40) / nw);
-    wrap.style.transform = 'scale(' + s + ')';
-    wrap.style.height = (nh * s) + 'px';
-    wrap.style.width = (nw * s) + 'px';
+    const lab = document.getElementById('lab');
+    [['wrap','row'],['wrap2','row2']].forEach(function(p){
+      const wrap = document.getElementById(p[0]), r = document.getElementById(p[1]);
+      if (wrap.style.display === 'none') return;
+      wrap.style.transform = 'none';
+      const nw = r.offsetWidth, nh = r.offsetHeight;
+      const s = Math.min(1, (lab.clientWidth - 40) / nw);
+      wrap.style.transform = 'scale(' + s + ')';
+      wrap.style.height = (nh * s) + 'px';
+      wrap.style.width = (nw * s) + 'px';
+    });
   }
-  addEventListener('resize', fit); fit(); setTimeout(fit, 300);
+  function show(t){
+    tab = t;
+    document.getElementById('wrap').style.display = t === 'phones' ? '' : 'none';
+    document.getElementById('wrap2').style.display = t === 'ipad' ? '' : 'none';
+    document.querySelectorAll('#tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.t === t); });
+    fit();
+  }
+  document.querySelectorAll('#tabs button').forEach(function(b){ b.onclick = function(){ show(b.dataset.t); }; });
+  addEventListener('resize', fit); show(tab); setTimeout(fit, 300);
 })();
 </script>
 </body>
