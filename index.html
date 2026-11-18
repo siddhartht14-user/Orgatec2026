@@ -120,10 +120,10 @@
   .meta p.n{color:#ffb15c;font-weight:400}
   .tag{font-weight:500}.tag.in{color:#ffb15c}.tag.qs{color:#8fd3d9}
   .gatepage{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-  .gatepage h2{margin-top:0}
+  .gatepage .sub{font-size:17px;margin:0 0 6px}
   .gate{width:100%;max-width:520px;margin:10px auto 0;text-align:center}
-  .gate .lbl{font-size:15px;font-weight:500;color:#cfcfcf;margin:22px 0 10px;letter-spacing:.02em}
-  .gate .lbl.ask{margin-top:34px;font-size:18px;color:#fff;font-weight:500}
+  .gate .lbl{font-size:21px;font-weight:500;color:#e6e6e6;margin:26px 0 12px;letter-spacing:.01em}
+  .gate .lbl.ask{margin-top:38px;font-size:21px;color:#fff;font-weight:500}
   .gate .fld{width:100%;height:50px;border-radius:12px;border:1px solid #3a3a3a;background:#1d1d1d;color:#fff;padding:0 16px;font:400 17px 'Poppins',sans-serif;text-align:center;
     -webkit-user-select:text;user-select:text;outline:0;-webkit-appearance:none;appearance:none}
   .gate .fld:focus{border-color:#8a8a8a;background:#222}
@@ -135,7 +135,7 @@
   .emailrow .fld{flex:1;min-width:0}
   .btn.go{background:#fff;color:#141414;padding:0 30px;height:50px;min-height:50px;border-radius:12px;font-weight:600}
   .btn.go:disabled{opacity:.5}
-  .gate .hint2{margin:14px 0 0;font-size:14px;font-weight:300;color:#9a9a9a}
+  .gate .hint2{margin:34px 0 0;font-size:14px;font-weight:300;color:#9a9a9a}
   .gate .toast.err{color:#ff8a80;min-height:20px;margin:10px 0 0;text-align:center}
   .sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-size:15px;font-weight:500}
   .sec small{font-weight:300;color:#aaa;font-size:13px}
@@ -255,13 +255,13 @@
     done.style.display = 'flex';
     if (!liked.length) return summary(liked);
     done.innerHTML =
-      '<div class="dscroll gatepage"><h2>One last thing</h2><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p>' +
+      '<div class="dscroll gatepage"><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p>' +
       '<form id="gate" class="gate" novalidate autocomplete="off">' +
         '<label class="lbl" for="org">Your organisation</label>' +
         '<input id="org" class="fld" type="text" placeholder="Company or practice name" maxlength="80" autocomplete="organization" enterkeyhint="next">' +
         '<div class="lbl">Your role</div><div class="roles" id="roles" role="radiogroup" aria-label="Your role"></div>' +
         '<div class="lbl ask">Do you want a summary of your selection?</div>' +
-        '<div class="emailrow"><input id="email" class="fld" type="email" inputmode="email" placeholder="Your email id (optional)" maxlength="120" autocomplete="email" enterkeyhint="go">' +
+        '<div class="emailrow"><input id="email" class="fld" type="email" inputmode="email" placeholder="Your email id" maxlength="120" autocomplete="email" enterkeyhint="go">' +
         '<button type="submit" class="btn go" id="go">Go</button></div>' +
         '<p class="hint2">Hit Go to see your selection</p>' +
         '<p class="toast err" id="err" role="alert"></p>' +
