@@ -119,6 +119,21 @@
   .inpill.dark::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent)}
   .meta p.n{color:#ffb15c;font-weight:400}
   .tag{font-weight:500}.tag.in{color:#ffb15c}.tag.qs{color:#8fd3d9}
+  .gate{max-width:560px;margin:6px auto 0;text-align:left}
+  .gate .lbl{font-size:14px;font-weight:500;color:#cfcfcf;margin:18px 2px 8px;letter-spacing:.02em}
+  .gate .lbl.ask{margin-top:26px;font-size:16px;color:#fff}
+  .gate .fld{width:100%;height:50px;border-radius:12px;border:1px solid #3a3a3a;background:#1d1d1d;color:#fff;padding:0 16px;font:400 17px 'Poppins',sans-serif;
+    -webkit-user-select:text;user-select:text;outline:0;-webkit-appearance:none;appearance:none}
+  .gate .fld:focus{border-color:#8a8a8a;background:#222}
+  .gate .fld::placeholder{color:#7d7d7d}
+  .roles{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{border:1px solid #3d3d3d;background:#1d1d1d;color:#e8e8e8;border-radius:999px;padding:12px 18px;font:400 15px/1.1 'Poppins',sans-serif;cursor:pointer;min-height:44px}
+  .chip.on{background:#fff;color:#141414;border-color:#fff;font-weight:500}
+  .emailrow{display:flex;gap:10px}
+  .emailrow .fld{flex:1;min-width:0}
+  .btn.go{background:#fff;color:#141414;padding:0 28px;height:50px;min-height:50px;border-radius:12px;font-weight:600}
+  .btn.go:disabled{opacity:.5}
+  .gate .toast.err{color:#ff8a80;min-height:20px;margin:12px 2px 0;text-align:left}
   .sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-size:15px;font-weight:500}
   .sec small{font-weight:300;color:#aaa;font-size:13px}
   .sec.in{color:#ffb15c}
@@ -229,11 +244,47 @@
     attach(top);
     if (idx === 0){ const h = document.createElement('div'); h.className='hint'; h.textContent='Drag the card, or tap a button'; top.querySelector('.photo').appendChild(h); }
   }
+  const ROLES = ['Architect / Designer', 'Real Estate', 'Workplace Strategist', 'Procurement', 'Other'];
+  let visitor = { org: '', role: '', email: '' };
   function finish(){
     actions.style.visibility = 'hidden';
     const liked = P.filter((_, i) => results[i] === 'yeah');
     done.style.display = 'flex';
-    done.innerHTML = '<div class="dscroll"><h2>Your shortlist</h2><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p><div class="grid"></div></div><div class="dfoot"><p class="toast" id="toast" role="status"></p></div>';
+    if (!liked.length) return summary(liked);
+    done.innerHTML =
+      '<div class="dscroll"><h2>One last thing</h2><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p>' +
+      '<form id="gate" class="gate" novalidate autocomplete="off">' +
+        '<label class="lbl" for="org">Your organisation</label>' +
+        '<input id="org" class="fld" type="text" placeholder="Company or practice name" maxlength="80" autocomplete="organization" enterkeyhint="next">' +
+        '<div class="lbl">Your role</div><div class="roles" id="roles" role="radiogroup" aria-label="Your role"></div>' +
+        '<div class="lbl ask">Do you want a summary of your selection?</div>' +
+        '<div class="emailrow"><input id="email" class="fld" type="email" inputmode="email" placeholder="Your email id" maxlength="120" autocomplete="email" enterkeyhint="go">' +
+        '<button type="submit" class="btn go" id="go">Go</button></div>' +
+        '<p class="toast err" id="err" role="alert"></p>' +
+      '</form></div>' +
+      '<div class="dfoot"><button type="button" class="btn ghost" id="again">Start again</button></div>';
+    const roles = done.querySelector('#roles');
+    ROLES.forEach(r => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = r; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false');
+      b.onclick = () => { visitor.role = r; roles.querySelectorAll('.chip').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', on); }); err.textContent = ''; };
+      roles.appendChild(b);
+    });
+    const org = done.querySelector('#org'), email = done.querySelector('#email'), err = done.querySelector('#err'), go = done.querySelector('#go');
+    visitor = { org: '', role: '', email: '' };
+    done.querySelector('#again').onclick = () => { idx = 0; results = []; render(); };
+    done.querySelector('#gate').onsubmit = async ev => {
+      ev.preventDefault();
+      const o = org.value.trim(), em = email.value.trim();
+      if (!o) { err.textContent = 'Please enter your organisation.'; org.focus(); return; }
+      if (!visitor.role) { err.textContent = 'Please choose your role.'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { err.textContent = 'Please enter a valid email id.'; email.focus(); return; }
+      visitor.org = o; visitor.email = em; go.disabled = true; err.textContent = '';
+      notify(liked, visitor); // silent, once per completion; the visitor goes straight to their summary
+      summary(liked);
+    };
+  }
+  function summary(liked){
+    done.innerHTML = '<div class="dscroll"><h2>Your shortlist</h2><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p><div class="grid"></div></div><div class="dfoot"></div>';
     const g = done.querySelector('.grid'), holder = g.parentNode;
     const indiaItems = liked.filter(isIndia), otherItems = liked.filter(p => !isIndia(p));
     function tile(p){
@@ -256,104 +307,22 @@
     section('India made products | BIS', indiaItems, 'in');
     section('All other products', otherItems, 'oth');
     if (!liked.length) holder.insertAdjacentHTML('beforeend', '<p class="sub">Nothing yet. Try again?</p>');
-    const foot = done.querySelector('.dfoot'), toast = done.querySelector('#toast');
-    if (liked.length) notify(liked); // email the selection as soon as the shortlist is complete (silent, once per completion)
-    const pdf = document.createElement('button'); pdf.className = 'btn pdf'; pdf.textContent = 'Download selection as PDF';
-    pdf.onclick = async () => {
-      if (!liked.length) { toast.textContent = 'Swipe Yeah on a few products first.'; return; }
-      pdf.textContent = 'Preparing PDF…'; pdf.disabled = true; toast.textContent = '';
-      try {
-        const blob = await buildPdf(liked);
-        const how = await savePdf(blob, 'Haworth-selection-' + new Date().toISOString().slice(0, 10) + '.pdf');
-        toast.textContent = how === 'cancelled' ? 'Download cancelled.' : 'PDF ready.';
-      } catch (err) { toast.textContent = 'Couldn’t create the PDF. Try again.'; console.error(err); }
-      pdf.textContent = 'Download selection as PDF'; pdf.disabled = false;
-    };
     const r = document.createElement('button'); r.className = 'btn ghost'; r.textContent = 'Start again';
     r.onclick = () => { idx = 0; results = []; render(); };
-    foot.appendChild(pdf); foot.appendChild(r);
+    done.querySelector('.dfoot').appendChild(r);
   }
-  async function notify(liked){
+  async function notify(liked, v){
     try {
       const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: P.length, selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '', note: p.note || '', india: isIndia(p) })) }) });
+        body: JSON.stringify({ total: P.length, org: v.org, role: v.role, email: v.email, device: deviceTag(),
+          selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '', note: p.note || '', india: isIndia(p) })) }) });
       return r.ok;
     } catch (e) { return false; }
   }
-  function loadScript(src){ return new Promise((res, rej) => { if (window.jspdf) return res(); const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = () => rej(new Error('PDF library failed to load')); document.head.appendChild(el); }); }
-  function loadImg(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Image failed: ' + src)); i.src = src; }); }
-  function tileData(img, focus, tw, th){
-    const f = (focus || '50% 50%').split(/\s+/).map(v => parseFloat(v) / 100), fx = f[0], fy = isNaN(f[1]) ? .5 : f[1];
-    const c = document.createElement('canvas'); c.width = tw; c.height = th;
-    const sc = Math.max(tw / img.naturalWidth, th / img.naturalHeight), sw = tw / sc, sh = th / sc;
-    c.getContext('2d').drawImage(img, (img.naturalWidth - sw) * fx, (img.naturalHeight - sh) * fy, sw, sh, 0, 0, tw, th);
-    return c.toDataURL('image/jpeg', .85);
-  }
-  async function buildPdf(items){
-    await loadScript('js/jspdf.umd.min.js');
-    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 14, GAP = 6, COLS = 3;
-    const logo = await loadImg('img/haworth-logo.png'), ratio = logo.naturalWidth / logo.naturalHeight;
-    const lc = document.createElement('canvas'); lc.width = logo.naturalWidth; lc.height = logo.naturalHeight; lc.getContext('2d').drawImage(logo, 0, 0);
-    const logoUrl = lc.toDataURL('image/png');
-    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    function band(first){
-      const bh = first ? 36 : 16, lh = first ? 7 : 5, lw = lh * ratio;
-      doc.setFillColor(20, 20, 20); doc.rect(0, 0, W, bh, 'F');
-      doc.addImage(logoUrl, 'PNG', (W - lw) / 2, first ? 9 : 5.5, lw, lh);
-      if (first) { doc.setTextColor(190, 190, 190); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-        doc.text('Product selection  ·  ' + dateStr + '  ·  ' + items.length + ' of ' + P.length + ' liked', W / 2, 28, { align: 'center' }); }
-      return bh;
-    }
-    const cw = (W - 2 * M - (COLS - 1) * GAP) / COLS, ih = cw * 4 / 3, th = 17, pitch = ih + th + 7;
-    const ind = items.filter(isIndia), oth = items.filter(p => !isIndia(p)), ordered = ind.concat(oth);
-    const imgs = new Map(await Promise.all(ordered.map(async p => [p, await loadImg(p.image)])));
-    let y = band(true) + 10, col = 0;
-    function drawSection(title, arr, india){
-      if (!arr.length) return;
-      if (y + 12 + ih + th > H - M) { doc.addPage(); y = band(false) + 10; }
-      if (india) { const fx = M, fy = y - 3.2, fw = 7, fh = 4.6;
-        doc.setFillColor(255, 153, 51); doc.rect(fx, fy, fw, fh / 3, 'F'); doc.setFillColor(235, 235, 235); doc.rect(fx, fy + fh / 3, fw, fh / 3, 'F'); doc.setFillColor(19, 136, 8); doc.rect(fx, fy + 2 * fh / 3, fw, fh / 3, 'F'); }
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(india ? 205 : 20, india ? 110 : 20, india ? 10 : 20);
-      doc.text(title + '  (' + arr.length + ')', M + (india ? 10 : 0), y);
-      y += 6; col = 0;
-      arr.forEach(p => {
-        if (col === 0 && y + ih + th > H - M) { doc.addPage(); y = band(false) + 10; }
-        const x = M + col * (cw + GAP);
-        doc.addImage(tileData(imgs.get(p), p.focus, 600, 800), 'JPEG', x, y, cw, ih);
-        doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-        doc.text(doc.splitTextToSize(p.name, cw)[0], x, y + ih + 5.5);
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110, 110, 110);
-        doc.text(doc.splitTextToSize(p.brand, cw)[0], x, y + ih + 10);
-        if (p.designer) doc.text(doc.splitTextToSize('Designed by ' + p.designer, cw)[0], x, y + ih + 14.5);
-        if (p.note) doc.text(doc.splitTextToSize(p.note, cw)[0], x, y + ih + (p.designer ? 19 : 14.5));
-        if (++col === COLS) { col = 0; y += pitch; }
-      });
-      if (col !== 0) { col = 0; y += pitch; }
-      y += 4;
-    }
-    drawSection('India made products | BIS', ind, true);
-    drawSection('All other products', oth, false);
-    return doc.output('blob');
-  }
-  async function savePdf(blob, filename){
-    try {
-      if (window.claude && window.claude.use) { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename, data: blob }); return 'saved'; } }
-    } catch (e) { if (/declin|cancel|denied|reject/i.test((e && e.message) || '')) return 'cancelled'; }
-    if (window.parent !== window) {
-      const bytes = await blob.arrayBuffer();
-      const r = await new Promise(res => {
-        const id = Math.random().toString(36).slice(2);
-        const h = e => { if (e.data && e.data.type === 'haworth-pdf-result' && e.data.id === id) { removeEventListener('message', h); res(e.data); } };
-        addEventListener('message', h);
-        parent.postMessage({ type: 'haworth-pdf', id, filename, bytes }, '*', [bytes]);
-        setTimeout(() => { removeEventListener('message', h); res({ ok: false }); }, 20000);
-      });
-      if (r.ok) return r.cancelled ? 'cancelled' : 'saved';
-      if (r.cancelled) return 'cancelled';
-    }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    return 'link';
+  function deviceTag(){
+    const ua = navigator.userAgent || '', touch = navigator.maxTouchPoints > 1;
+    let d = /iPhone/.test(ua) ? 'iPhone' : (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch)) ? 'iPad' : /Android/.test(ua) ? 'Android' : 'Desktop';
+    return d + ' ' + Math.round(innerWidth) + 'x' + Math.round(innerHeight);
   }
   function decide(card, dir, vx){
     if (busy) return; busy = true;
@@ -411,7 +380,7 @@
     decide(top, dir, 0);
   }
   bNah.onclick = () => button(-1); bYeah.onclick = () => button(1);
-  addEventListener('keydown', e => { if (e.key === 'ArrowLeft') button(-1); if (e.key === 'ArrowRight') button(1); });
+  addEventListener('keydown', e => { if (/^(INPUT|TEXTAREA)$/.test((e.target && e.target.tagName) || '') || done.style.display === 'flex') return; if (e.key === 'ArrowLeft') button(-1); if (e.key === 'ArrowRight') button(1); });
   render();
 })();
 </script>
