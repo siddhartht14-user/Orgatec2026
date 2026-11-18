@@ -59,9 +59,65 @@
   .hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:12px;color:#fff;font-weight:300;
     text-shadow:0 1px 6px #000;pointer-events:none;animation:fade 4s 1s forwards;opacity:.9}
   @keyframes fade{to{opacity:0}}
+
+  /* ---- first-load coach overlay (glass) ---- */
+  #coach{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:rgba(18,18,18,.38);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);
+    transition:opacity .35s ease;cursor:pointer}
+  #coach.out{opacity:0;pointer-events:none}
+  .cpanel{width:min(88vw,340px);padding:22px 18px 18px;border-radius:28px;text-align:center;
+    background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.22);box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.25);
+    -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+  .cpanel h3{margin:0 0 2px;font-weight:500;font-size:20px;letter-spacing:.01em}
+  .cpanel .csub{margin:0 0 14px;font-weight:300;font-size:13.5px;color:#d6d6d6}
+  .cstage{position:relative;height:238px;margin:0 auto 6px;overflow:visible}
+  .ccard{position:absolute;left:50%;top:6px;width:150px;height:200px;margin-left:-75px;border-radius:16px;overflow:hidden;
+    background:#222 center/cover no-repeat;border:1px solid rgba(255,255,255,.3);box-shadow:0 12px 28px rgba(0,0,0,.45);
+    animation:ccard 6.4s ease-in-out infinite}
+  .cstamp{position:absolute;top:14px;padding:2px 9px;border:3px solid;border-radius:8px;font-weight:600;font-size:19px;letter-spacing:.06em;opacity:0;background:rgba(0,0,0,.28)}
+  .cstamp.y{left:10px;color:#6fdc4f;border-color:#6fdc4f;transform:rotate(-14deg);animation:cy 6.4s ease-in-out infinite}
+  .cstamp.n{right:10px;color:#ff6a5f;border-color:#ff6a5f;transform:rotate(14deg);animation:cn 6.4s ease-in-out infinite}
+  .chand{position:absolute;left:50%;top:116px;width:62px;height:auto;margin-left:-14px;pointer-events:none;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.5));animation:chand 6.4s ease-in-out infinite}
+  .ccap{position:absolute;left:0;right:0;bottom:-2px;font-size:15px;font-weight:500;opacity:0;white-space:nowrap}
+  .ccap b{font-weight:600}
+  .ccap.y{color:#a9e79a;animation:capy 6.4s ease-in-out infinite}
+  .ccap.n{color:#ffaba4;animation:capn 6.4s ease-in-out infinite}
+  .cgo{margin-top:8px;width:100%;border:1px solid rgba(255,255,255,.3);border-radius:999px;min-height:46px;padding:8px 16px;
+    font:500 16px/1.2 'Poppins',sans-serif;color:#fff;cursor:pointer;background:rgba(255,255,255,.14);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  .cgo:active{transform:scale(.96)}
+  /* 0-8 rest | 8-30 swipe right | 30-42 back | 50-72 swipe left | 72-84 back */
+  @keyframes ccard{0%,8%{transform:translateX(0) rotate(0)}26%,32%{transform:translateX(70px) rotate(12deg)}42%,50%{transform:translateX(0) rotate(0)}68%,74%{transform:translateX(-70px) rotate(-12deg)}84%,100%{transform:translateX(0) rotate(0)}}
+  @keyframes chand{0%,5%{transform:translate(0,14px) scale(1.06);opacity:0}10%{transform:translate(0,0) scale(1);opacity:1}
+    26%,32%{transform:translate(70px,0) scale(.97);opacity:1}42%,50%{transform:translate(0,0) scale(1);opacity:1}
+    68%,74%{transform:translate(-70px,0) scale(.97);opacity:1}84%{transform:translate(0,0) scale(1);opacity:1}92%,100%{transform:translate(0,14px) scale(1.06);opacity:0}}
+  @keyframes cy{0%,16%{opacity:0}26%,33%{opacity:1}40%,100%{opacity:0}}
+  @keyframes cn{0%,58%{opacity:0}68%,75%{opacity:1}82%,100%{opacity:0}}
+  @keyframes capy{0%,10%{opacity:0}18%,34%{opacity:1}42%,100%{opacity:0}}
+  @keyframes capn{0%,52%{opacity:0}60%,76%{opacity:1}84%,100%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.ccard,.chand,.cstamp,.ccap{animation:none}.ccap.y{opacity:1;bottom:20px}.ccap.n{opacity:1}.chand{display:none}}
 </style>
 </head>
 <body>
+<div id="coach" role="dialog" aria-label="How to use">
+  <div class="cpanel">
+    <h3>Swipe to choose</h3>
+    <p class="csub">Build your shortlist in seconds</p>
+    <div class="cstage">
+      <div class="ccard" id="ccard"><span class="cstamp y">YEAH</span><span class="cstamp n">NAH</span></div>
+      <svg class="chand" viewBox="0 0 64 84" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#dfe6ee" stop-opacity=".85"/></linearGradient></defs>
+        <path d="M22 6c0-3.3 2.7-6 6-6s6 2.7 6 6v27.5c1-1.1 2.5-1.8 4.2-1.8 3 0 5.3 2.2 5.6 5 1-1 2.4-1.6 4-1.6 3.1 0 5.5 2.4 5.5 5.4 1-.7 2.2-1.1 3.5-1.1C58 39.4 60 41.7 60 44.6V58c0 14-9 26-23 26h-4C21.700 84 14 77 9.500 68.200L1.800 52.800c-1.400-2.800-.3-6 2.300-7.300 2.300-1.200 5.100-.6 6.800 1.300L16 53V6.500" fill="url(#hg)" stroke="rgba(30,30,30,.35)" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M34 38v10M44 38.500v9.500M53 41v7" stroke="rgba(30,30,30,.22)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div class="ccap y">Like it? <b>Swipe right</b> &rarr;</div>
+      <div class="ccap n">&larr; Not for you? <b>Swipe left</b></div>
+    </div>
+    <button class="cgo" id="cgo">Got it, start swiping</button>
+  </div>
+</div>
 <div id="app">
   <header>
     <img class="logo" src="img/haworth-logo.png" alt="HAWORTH">
@@ -264,6 +320,15 @@
   bNah.onclick = () => button(-1); bYeah.onclick = () => button(1);
   addEventListener('keydown', e => { if (e.key === 'ArrowLeft') button(-1); if (e.key === 'ArrowRight') button(1); });
   render();
+})();
+</script>
+<script>
+(function(){
+  var c=document.getElementById('coach'); if(!c) return;
+  try{ var P=window.PRODUCTS; if(P&&P[0]) document.getElementById('ccard').style.backgroundImage='url("'+P[0].image+'")'; }catch(e){}
+  function close(){ c.classList.add('out'); setTimeout(function(){ c.remove(); },400); }
+  c.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(c.parentNode && (e.key==='Enter'||e.key==='Escape'||e.key===' ')) close(); });
 })();
 </script>
 </body>
