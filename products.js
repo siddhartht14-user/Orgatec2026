@@ -27,5 +27,6 @@ window.PRODUCTS = [
   { name: "HushFree S", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-s.jpg", focus: "48% 50%", light: true },
   { name: "Poppy Lounge", brand: "Haworth", designer: "Patricia Urquiola", image: "img/poppy-lounge-2.jpg" },
   { name: "Poppy 4 Star", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-4-star.jpg", light: true },
-  { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg", light: true }
+  { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg", light: true },
+  { name: "HushFree M", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-m.jpg", focus: "90% 50%", light: true }
 ];
