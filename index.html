@@ -61,10 +61,14 @@
   @keyframes fade{to{opacity:0}}
 
   /* ---- first-load coach overlay (glass) ---- */
-  #coach{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;
+  #coach{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
     background:rgba(18,18,18,.38);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);
     transition:opacity .35s ease;cursor:pointer}
   #coach.out{opacity:0;pointer-events:none}
+  .clogo{display:block;pointer-events:none;-webkit-user-drag:none}
+  .clogo.hw{height:clamp(20px,3.4vh,28px);width:auto;margin-bottom:clamp(22px,4.4vh,40px)}
+  .clogo.og{height:clamp(64px,10.5vh,96px);width:auto;margin-bottom:clamp(22px,4.4vh,40px);border-radius:5px;background:#fff}
+  @media (max-height:640px){.clogo.og{height:54px}.clogo.hw{height:18px}}
   .cpanel{width:min(88vw,340px);padding:22px 18px 18px;border-radius:28px;text-align:center;
     background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
     border:1px solid rgba(255,255,255,.22);box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.25);
@@ -178,6 +182,8 @@
 </head>
 <body>
 <div id="coach" role="dialog" aria-label="How to use">
+  <img class="clogo hw" src="img/haworth-logo.png" alt="Haworth">
+  <img class="clogo og" src="img/orgatec-india.png" alt="Orgatec India">
   <div class="cpanel">
     <h3>Swipe to choose</h3>
     <p class="csub">Build your shortlist in seconds</p>
