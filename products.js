@@ -14,7 +14,7 @@ window.PRODUCTS = [
   { name: "Your Place Echo", brand: "Haworth",   designer: "",                   image: "img/yp-echo.jpg" },
   { name: "BuzziShade", brand: "BuzziSpace | Made in India", designer: "Stal Collectief", image: "img/buzzishade.jpg", focus: "50% 0%" },
   { name: "Collaborate Cart", brand: "Haworth", designer: "", image: "img/collaborate-cart.jpg" },
-  { name: "Cabana", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/cabana.jpg" },
+  { name: "Cabana", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/cabana.jpg", light: true },
   { name: "Chic Pouf", brand: "Haworth", designer: "Patricia Urquiola", image: "img/chic-pouf.jpg" },
   { name: "Poppy Tablet", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-tablet.jpg" },
   { name: "BuzziPlanter", brand: "BuzziSpace", designer: "", image: "img/buzziplanter.jpg" },
@@ -24,8 +24,8 @@ window.PRODUCTS = [
   { name: "HushFree S Hybrid", brand: "HushOffice", designer: "", image: "img/hushfree-s-hybrid.jpg" },
   { name: "HushFree M Access", brand: "HushOffice", designer: "", image: "img/hushfree-m-access.jpg" },
   { name: "Belong Monitor Arm", brand: "Haworth", designer: "", image: "img/belong-monitor-arm.jpg", focus: "35% 50%" },
-  { name: "HushFree S", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-s.jpg", focus: "48% 50%" },
+  { name: "HushFree S", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-s.jpg", focus: "48% 50%", light: true },
   { name: "Poppy Lounge", brand: "Haworth", designer: "Patricia Urquiola", image: "img/poppy-lounge-2.jpg" },
-  { name: "Poppy 4 Star", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-4-star.jpg" },
-  { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg" }
+  { name: "Poppy 4 Star", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-4-star.jpg", light: true },
+  { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg", light: true }
 ];

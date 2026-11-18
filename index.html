@@ -112,6 +112,11 @@
   @keyframes inpop{from{opacity:0;transform:scale(.6);transform-origin:left top}to{opacity:1;transform:scale(1);transform-origin:left top}}
   @keyframes inpulse{0%,100%{box-shadow:0 2px 10px rgba(0,0,0,.22),0 0 0 0 rgba(255,153,51,0)}50%{box-shadow:0 2px 10px rgba(0,0,0,.22),0 0 0 6px rgba(255,153,51,.12)}}
   @keyframes inshine{0%,55%{left:-60%}100%{left:130%}}
+  .inpill.dark{color:#3a3a3a;text-shadow:0 1px 3px rgba(255,255,255,.55);border-color:rgba(60,60,60,.30);
+    background:linear-gradient(135deg,rgba(255,153,51,.24),rgba(255,153,51,.08));box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .inpill.stock{color:#e7fbfc;background:linear-gradient(135deg,rgba(70,200,210,.17),rgba(70,200,210,.05));border-color:rgba(150,228,234,.42)}
+  .inpill.stock.dark{color:#2f3a3b;background:linear-gradient(135deg,rgba(70,200,210,.26),rgba(70,200,210,.09));border-color:rgba(40,110,115,.32)}
+  .inpill.dark::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent)}
   .tag{font-weight:500}.tag.in{color:#ffb15c}.tag.qs{color:#8fd3d9}
   .sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-size:15px;font-weight:500}
   .sec small{font-weight:300;color:#aaa;font-size:13px}
@@ -173,7 +178,8 @@
       '<div class="meta"><h2></h2><p class="b"></p><p class="d"></p></div>';
     c.querySelector('img').src = p.image;
     c.querySelector('h2').textContent = p.name;
-    c.querySelector('.photo').insertAdjacentHTML('beforeend', isIndia(p) ? '<span class="inpill"><i class="flag"></i>MADE IN INDIA</span>' : '');
+    const pillKind = isIndia(p) ? ['', 'MADE IN INDIA'] : (/quickship/i.test(p.brand || '') ? ['stock', 'STOCKED IN INDIA'] : null);
+    if (pillKind) c.querySelector('.photo').insertAdjacentHTML('beforeend', '<span class="inpill ' + pillKind[0] + (p.light ? ' dark' : '') + '"><i class="flag"></i>' + pillKind[1] + '</span>');
     setBrand(c.querySelector('.b'), p.brand);
     const d = c.querySelector('.d'); if (p.designer) d.textContent = 'Designed by ' + p.designer; else d.remove();
     if (p.focus) c.querySelector('img').style.objectPosition = p.focus;
