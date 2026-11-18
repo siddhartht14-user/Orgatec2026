@@ -319,18 +319,90 @@
     r.onclick = () => { idx = 0; results = []; render(); };
     done.querySelector('.dfoot').appendChild(r);
   }
+  function loadScript(src){ return new Promise((res, rej) => { if (window.jspdf) return res(); const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = () => rej(new Error('PDF library failed to load')); document.head.appendChild(el); }); }
+  function loadImg(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Image failed: ' + src)); i.src = src; }); }
+  // product photo cropped to the tile (same focus as the app), top corners rounded, page-coloured corners
+  function tileImg(img, focus, tw, th, r){
+    const f = (focus || '50% 50%').split(/\s+/).map(v => parseFloat(v) / 100), fx = isNaN(f[0]) ? .5 : f[0], fy = isNaN(f[1]) ? .5 : f[1];
+    const c = document.createElement('canvas'); c.width = tw; c.height = th; const x = c.getContext('2d');
+    x.fillStyle = '#141414'; x.fillRect(0, 0, tw, th);
+    x.beginPath(); x.moveTo(0, th); x.lineTo(0, r); x.quadraticCurveTo(0, 0, r, 0); x.lineTo(tw - r, 0); x.quadraticCurveTo(tw, 0, tw, r); x.lineTo(tw, th); x.closePath(); x.clip();
+    const sc = Math.max(tw / img.naturalWidth, th / img.naturalHeight), sw = tw / sc, sh = th / sc;
+    x.drawImage(img, (img.naturalWidth - sw) * fx, (img.naturalHeight - sh) * fy, sw, sh, 0, 0, tw, th);
+    return c.toDataURL('image/jpeg', .74);
+  }
+  async function buildSummaryPdf(items){
+    await loadScript('js/jspdf.umd.min.js');
+    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, H = 297, M = 14, GAP = 6, COLS = 3, cw = (W - 2 * M - (COLS - 1) * GAP) / COLS, ih = cw * 1.2, cap = 17, th = ih + cap, pitch = th + 6, R = 3;
+    const ORANGE = [255, 177, 92], GREY = [154, 154, 154];
+    const hw = await loadImg('img/haworth-logo.png'), og = await loadImg('img/orgatec-india-s.png');
+    const toPng = im => { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return c.toDataURL('image/png'); };
+    const hwUrl = toPng(hw), ogUrl = toPng(og), hwR = hw.naturalWidth / hw.naturalHeight, ogR = og.naturalWidth / og.naturalHeight;
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const ind = items.filter(isIndia), oth = items.filter(p => !isIndia(p));
+    const imgs = new Map(await Promise.all(items.map(async p => [p, await loadImg(p.image)])));
+    let pageNo = 0, y = 0;
+    function newPage(){
+      if (pageNo++) doc.addPage();
+      doc.setFillColor(20, 20, 20); doc.rect(0, 0, W, H, 'F');
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(110, 110, 110);
+      doc.text('Haworth  |  Orgatec India 2026', W / 2, H - 8, { align: 'center' });
+      if (pageNo === 1) {
+        doc.addImage(hwUrl, 'PNG', M, 14, 6.5 * hwR, 6.5);
+        const oh = 16; doc.addImage(ogUrl, 'PNG', W - M - oh * ogR, 10, oh * ogR, oh);
+        doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(20); doc.text('Your Selection', W / 2, 42, { align: 'center' });
+        doc.setTextColor(170, 170, 170); doc.setFontSize(9.5); doc.text(dateStr + '   |   ' + items.length + ' of ' + P.length + ' liked', W / 2, 49, { align: 'center' });
+        y = 62;
+      } else { doc.addImage(hwUrl, 'PNG', M, 10, 4.6 * hwR, 4.6); y = 24; }
+    }
+    function brandLine(p, cx, by){
+      const parts = String(p.brand || '').split('|').map(t => t.trim()), left = parts[0] || '', tag = parts[1] || '';
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.2);
+      const wl = doc.getTextWidth(left), wsep = tag ? doc.getTextWidth('  |  ') : 0;
+      doc.setFont('helvetica', 'bold'); const wt = tag ? doc.getTextWidth(tag) : 0;
+      let x = cx - (wl + wsep + wt) / 2;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(...GREY); doc.text(left, x, by);
+      if (tag) { doc.text('  |  ', x + wl, by); doc.setFont('helvetica', 'bold'); doc.setTextColor(...ORANGE); doc.text(tag, x + wl + wsep, by); }
+    }
+    function drawTile(p, x, ty, india){
+      doc.setFillColor(31, 31, 31); doc.roundedRect(x, ty, cw, th, R, R, 'F');
+      doc.addImage(tileImg(imgs.get(p), p.focus, 380, Math.round(380 * 1.2), 13), 'JPEG', x, ty, cw, ih);
+      let fs = 10.5; doc.setFont('helvetica', 'bold'); doc.setFontSize(fs);
+      while (doc.getTextWidth(p.name) > cw - 6 && fs > 7.5) { fs -= .5; doc.setFontSize(fs); }
+      doc.setTextColor(255, 255, 255); doc.text(p.name, x + cw / 2, ty + ih + 7, { align: 'center' });
+      brandLine(p, x + cw / 2, ty + ih + 12.4);
+      if (india) { doc.setDrawColor(217, 120, 10); doc.setLineWidth(.5); doc.roundedRect(x, ty, cw, th, R, R, 'S'); }
+    }
+    function section(title, arr, india){
+      if (!arr.length) return;
+      if (y + 10 + th > H - 16) newPage();
+      if (india) { const fx = M, fy = y - 3.4, fw = 7, fh = 4.6;
+        doc.setFillColor(255, 153, 51); doc.rect(fx, fy, fw, fh / 3, 'F'); doc.setFillColor(235, 235, 235); doc.rect(fx, fy + fh / 3, fw, fh / 3, 'F'); doc.setFillColor(19, 136, 8); doc.rect(fx, fy + 2 * fh / 3, fw, fh / 3, 'F'); }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); if (india) doc.setTextColor(...ORANGE); else doc.setTextColor(255, 255, 255);
+      doc.text(title + '  (' + arr.length + ')', M + (india ? 10 : 0), y);
+      y += 6; let col = 0;
+      arr.forEach(p => {
+        if (col === 0 && y + th > H - 16) { newPage(); }
+        drawTile(p, M + col * (cw + GAP), y, india);
+        if (++col === COLS) { col = 0; y += pitch; }
+      });
+      if (col !== 0) y += pitch;
+      y += 4;
+    }
+    newPage();
+    section('India made products | BIS', ind, true);
+    section('All other products', oth, false);
+    return doc.output('datauristring').split('base64,')[1];
+  }
   async function notify(liked, v){
+    let pdf = '';
+    if (v.email) { try { pdf = await buildSummaryPdf(liked); } catch (e) { console.error(e); } }
     try {
       const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: P.length, org: v.org, role: v.role, email: v.email, device: deviceTag(),
-          selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '', note: p.note || '', india: isIndia(p) })) }) });
+        body: JSON.stringify({ total: P.length, count: liked.length, org: v.org, role: v.role, email: v.email, pdf }) });
       return r.ok;
     } catch (e) { return false; }
-  }
-  function deviceTag(){
-    const ua = navigator.userAgent || '', touch = navigator.maxTouchPoints > 1;
-    let d = /iPhone/.test(ua) ? 'iPhone' : (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch)) ? 'iPad' : /Android/.test(ua) ? 'Android' : 'Desktop';
-    return d + ' ' + Math.round(innerWidth) + 'x' + Math.round(innerHeight);
   }
   function decide(card, dir, vx){
     if (busy) return; busy = true;

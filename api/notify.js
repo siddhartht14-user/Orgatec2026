@@ -1,7 +1,10 @@
-// Vercel serverless function: emails the selection summary via Resend.
-// Env vars (set in Vercel): RESEND_API_KEY (required), RESEND_FROM (verified sender), NOTIFY_TO (default below).
+// Vercel serverless function (Resend).
+// 1) Always: a short lead record to the team inbox (organisation, role, email).
+// 2) If the visitor gave an email AND a verified sender is configured: a thank-you note with their selection as a PDF.
+// Env vars (Vercel): RESEND_API_KEY (required), RESEND_FROM (verified sender, needed for the visitor email),
+//                    NOTIFY_TO (team inbox, default below), PUBLIC_URL (site URL used for the logo in the email).
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const clip = (s, n) => String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').slice(0, n);
+const clip = (s, n) => String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').trim().slice(0, n);
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ ok: false, error: 'method' }); }
@@ -10,60 +13,50 @@ module.exports = async (req, res) => {
 
   let b = req.body;
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch (_) { return res.status(400).json({ ok: false, error: 'bad-json' }); } }
-  const sel = Array.isArray(b && b.selected) ? b.selected.slice(0, 40) : [];
-  if (!sel.length) return res.status(400).json({ ok: false, error: 'empty' });
-  const items = sel.map(i => ({ name: clip(i && i.name, 80), brand: clip(i && i.brand, 60), designer: clip(i && i.designer, 80), note: clip(i && i.note, 60) }))
-    .map(i => Object.assign(i, { india: /made in india/i.test(i.brand) })).filter(i => i.name);
-  const org = clip(b.org, 80), role = clip(b.role, 40), device = clip(b.device, 40);
+  b = b || {};
+  const count = Math.max(0, Math.min(parseInt(b.count, 10) || 0, 99));
+  if (!count) return res.status(400).json({ ok: false, error: 'empty' });
+  const org = clip(b.org, 80), role = clip(b.role, 40);
   const email = /^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]{2,}$/.test(String(b.email || '').trim()) ? String(b.email).trim().slice(0, 120) : '';
-  const total = Math.min(Math.max(parseInt(b.total, 10) || items.length, items.length), 99);
+  const pdf = typeof b.pdf === 'string' && /^[A-Za-z0-9+/=]+$/.test(b.pdf) && b.pdf.length < 6e6 ? b.pdf : '';
 
-  const now = new Date();
-  const ist = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + ' IST';
-  const iso = now.toISOString();
-  const subject = 'Product selection: ' + items.length + ' of ' + total + ' liked' + (org ? ' - ' + org : '') + (role ? ' (' + role + ')' : '') + ' (' + ist + ')';
-
-  const india = items.filter(i => i.india), other = items.filter(i => !i.india);
-  const line = i => i.name + ' - ' + i.brand + (i.designer ? ' (designed by ' + i.designer + ')' : '') + (i.note ? ' [' + i.note + ']' : '');
-  const sec = (title, arr) => arr.length ? title + ' (' + arr.length + ')\n' + arr.map((i, n) => (n + 1) + '. ' + line(i)).join('\n') + '\n\n' : '';
-  const who = [['Organisation', org], ['Role', role], ['Email', email], ['Device', device]].filter(x => x[1]);
-  const text = 'Product selection\n' + ist + '  |  ' + iso + '\n' + items.length + ' of ' + total + ' liked\n' +
-    (who.length ? '\n' + who.map(x => x[0] + ': ' + x[1]).join('\n') + '\n' : '') + '\n' +
-    sec('INDIA MADE PRODUCTS | BIS', india) + sec('ALL OTHER PRODUCTS', other);
-  const rows = (arr, accent) => arr.map((i, n) => '<tr><td style="padding:8px 10px 8px 0;border-top:1px solid #eee;color:#999;width:28px">' + (n + 1) + '</td><td style="padding:8px 0;border-top:1px solid #eee"><b style="font-weight:500">' + esc(i.name) + '</b><br><span style="color:#666;font-size:13px">' + esc(i.brand) + (i.designer ? ' · Designed by ' + esc(i.designer) : '') + (i.note ? ' · ' + esc(i.note) : '') + '</span></td></tr>').join('');
-  const hsec = (title, arr, color) => arr.length ? '<h3 style="margin:20px 0 6px;font-weight:600;font-size:16px;color:' + color + ';border-left:5px solid ' + color + ';padding-left:8px">' + esc(title) + ' <span style="color:#999;font-weight:400;font-size:13px">(' + arr.length + ')</span></h3><table style="border-collapse:collapse;width:100%;font-size:15px">' + rows(arr) + '</table>' : '';
-  const html = '<div style="font-family:Arial,Helvetica,sans-serif;color:#141414;max-width:520px">' +
-    '<h2 style="margin:0 0 4px;font-weight:500">Product selection</h2>' +
-    '<p style="margin:0 0 4px;color:#666;font-size:14px">' + esc(ist) + '<br>' + items.length + ' of ' + total + ' liked</p>' +
-    (who.length ? '<table style="border-collapse:collapse;margin:10px 0 0;font-size:15px">' + who.map(x => '<tr><td style="padding:3px 14px 3px 0;color:#999">' + esc(x[0]) + '</td><td style="padding:3px 0"><b style="font-weight:500">' + esc(x[1]) + '</b></td></tr>').join('') + '</table>' : '') +
-    hsec('India made products | BIS', india, '#d9780a') + hsec('All other products', other, '#141414') + '</div>';
-
+  const TEAM = process.env.NOTIFY_TO || 'siddhartht14@gmail.com';
   const FROM = process.env.RESEND_FROM || 'Haworth Selector <onboarding@resend.dev>';
+  const SITE = (process.env.PUBLIC_URL || 'https://orgatec2026.vercel.app').replace(/\/$/, '');
+  const ist = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
   const send = payload => fetch('https://api.resend.com/emails', {
     method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  try {
-    // 1) internal notification to the team inbox (always)
-    const r = await send({ from: FROM, to: [process.env.NOTIFY_TO || 'siddhartht14@gmail.com'], subject, html, text, ...(email ? { reply_to: email } : {}) });
-    if (!r.ok) return res.status(502).json({ ok: false, error: 'resend-' + r.status });
 
-    // 2) a copy of the summary to the visitor. Needs a verified sender domain in Resend (set RESEND_FROM);
-    //    with the default onboarding sender Resend only delivers to the account owner, so this is skipped.
-    let visitor = 'skipped';
-    if (email && process.env.RESEND_FROM) {
-      const vhtml = '<div style="font-family:Arial,Helvetica,sans-serif;color:#141414;max-width:520px">' +
-        '<h2 style="margin:0 0 4px;font-weight:500">Your Haworth product selection</h2>' +
-        '<p style="margin:0 0 4px;color:#666;font-size:14px">Thank you for visiting us at Orgatec India. You liked ' + items.length + ' of ' + total + ' products.</p>' +
-        hsec('India made products | BIS', india, '#d9780a') + hsec('All other products', other, '#141414') +
-        '<p style="margin:24px 0 0;color:#666;font-size:13px">Reply to this email and our team will get back to you.</p></div>';
-      const vtext = 'Your Haworth product selection\nYou liked ' + items.length + ' of ' + total + ' products.\n\n' +
-        sec('INDIA MADE PRODUCTS | BIS', india) + sec('ALL OTHER PRODUCTS', other);
-      try {
-        const v = await send({ from: FROM, to: [email], subject: 'Your Haworth product selection', html: vhtml, text: vtext, reply_to: process.env.NOTIFY_TO || 'siddhartht14@gmail.com' });
-        visitor = v.ok ? 'sent' : 'failed-' + v.status;
-      } catch (_) { visitor = 'failed'; }
-    }
-    return res.status(200).json({ ok: true, visitor });
-  } catch (e) {
-    return res.status(502).json({ ok: false, error: 'network' });
+  // 1) lead record
+  const rec = [['Organisation', org], ['Role', role], ['Email', email]];
+  const ltext = 'Orgatec India 2026 - new visitor\n' + ist + '\n\n' + rec.map(r => r[0] + ': ' + (r[1] || '-')).join('\n') + '\n';
+  const lhtml = '<div style="font-family:Arial,Helvetica,sans-serif;color:#141414;max-width:480px">' +
+    '<h2 style="margin:0 0 4px;font-weight:500">Orgatec India 2026 - new visitor</h2><p style="margin:0 0 12px;color:#666;font-size:14px">' + esc(ist) + '</p>' +
+    '<table style="border-collapse:collapse;font-size:15px">' + rec.map(r => '<tr><td style="padding:5px 18px 5px 0;color:#999">' + esc(r[0]) + '</td><td style="padding:5px 0"><b style="font-weight:500">' + esc(r[1] || '-') + '</b></td></tr>').join('') + '</table></div>';
+  try {
+    const r = await send({ from: FROM, to: [TEAM], subject: 'Orgatec lead: ' + (org || 'Visitor') + (role ? ' (' + role + ')' : ''), html: lhtml, text: ltext, ...(email ? { reply_to: email } : {}) });
+    if (!r.ok) return res.status(502).json({ ok: false, error: 'resend-' + r.status });
+  } catch (e) { return res.status(502).json({ ok: false, error: 'network' }); }
+
+  // 2) thank-you + PDF to the visitor (needs a verified sender domain, i.e. RESEND_FROM)
+  let visitor = 'skipped';
+  if (email && process.env.RESEND_FROM) {
+    const P1 = 'We loved hosting you at Haworth’s Orgatec India 2026 showcase. Thank you for taking the time to visit us and to explore our range.';
+    const P2 = 'We hope our sensory experience and products gave you fresh insights and design ideas for your future projects. Your personal selection is attached as a PDF for easy reference.';
+    const P3 = 'If you would like samples, specifications or a conversation about a project, simply reply to this email and our team will be glad to help.';
+    const text = 'Hi,\n\n' + P1 + '\n\n' + P2 + '\n\n' + P3 + '\n\nWarm regards,\nTeam Haworth India\n';
+    const p = 'style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#2b2b2b"';
+    const html = '<div style="background:#f4f4f4;padding:28px 12px;font-family:Arial,Helvetica,sans-serif">' +
+      '<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden">' +
+      '<div style="padding:30px 36px 6px"><img src="' + SITE + '/img/haworth-logo-black.png" alt="HAWORTH" width="170" style="display:block;border:0;height:auto"></div>' +
+      '<div style="padding:18px 36px 8px"><p ' + p + '>Hi,</p><p ' + p + '>' + esc(P1) + '</p><p ' + p + '>' + esc(P2) + '</p><p ' + p + '>' + esc(P3) + '</p>' +
+      '<p style="margin:26px 0 0;font-size:16px;line-height:1.5;color:#2b2b2b">Warm regards,<br><b style="font-weight:600">Team Haworth India</b></p></div>' +
+      '<div style="padding:22px 36px 28px;font-size:12px;color:#999">Haworth India &nbsp;|&nbsp; Orgatec India 2026</div></div></div>';
+    try {
+      const v = await send({ from: FROM, to: [email], subject: 'Haworth | Your Selection', html, text, reply_to: TEAM,
+        ...(pdf ? { attachments: [{ filename: 'Haworth-Your-Selection.pdf', content: pdf }] } : {}) });
+      visitor = v.ok ? (pdf ? 'sent-with-pdf' : 'sent-no-pdf') : 'failed-' + v.status;
+    } catch (_) { visitor = 'failed'; }
   }
+  return res.status(200).json({ ok: true, visitor });
 };
