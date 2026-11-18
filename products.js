@@ -12,7 +12,7 @@ window.PRODUCTS = [
   { name: "Mush",           brand: "Cappellini", designer: "Giulio Cappellini",  image: "img/cappellini-mush.jpg" },
   { name: "Orla",           brand: "Cappellini", designer: "Jasper Morrison",    image: "img/orla.jpg", focus: "76% 50%" },
   { name: "Your Place Echo", brand: "Haworth",   designer: "",                   image: "img/yp-echo.jpg" },
-  { name: "BuzziShade", brand: "BuzziSpace", designer: "Stal Collectief", image: "img/buzzishade.jpg" },
+  { name: "BuzziShade", brand: "BuzziSpace", designer: "Stal Collectief", image: "img/buzzishade.jpg", focus: "50% 0%" },
   { name: "Collaborate Cart", brand: "Haworth", designer: "", image: "img/collaborate-cart.jpg" },
   { name: "Cabana", brand: "Haworth", designer: "Patricia Urquiola", image: "img/cabana.jpg" },
   { name: "Chic Pouf", brand: "Haworth", designer: "Patricia Urquiola", image: "img/chic-pouf.jpg" },
