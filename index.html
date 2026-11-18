@@ -98,6 +98,28 @@
   @keyframes capy{0%,10%{opacity:0}18%,34%{opacity:1}42%,100%{opacity:0}}
   @keyframes capn{0%,52%{opacity:0}60%,76%{opacity:1}84%,100%{opacity:0}}
   @media (prefers-reduced-motion:reduce){.ccard,.chand,.cstamp,.ccap{animation:none}.ccap.y{opacity:1;bottom:20px}.ccap.n{opacity:1}.chand{display:none}}
+
+  /* ---- Made in India visibility ---- */
+  .inpill{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:7px;white-space:nowrap;
+    padding:6px 13px 6px 9px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.09em;color:#fff3e0;
+    background:linear-gradient(135deg,rgba(255,153,51,.34),rgba(255,153,51,.14));border:1px solid rgba(255,190,110,.55);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 4px 16px rgba(0,0,0,.35);
+    overflow:hidden;animation:inpop .6s cubic-bezier(.2,1.4,.4,1) both,inpulse 3.2s 1.2s ease-in-out infinite;pointer-events:none}
+  .inpill::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+    animation:inshine 3.2s 1.2s ease-in-out infinite}
+  .flag{display:inline-block;width:17px;height:12px;border-radius:2px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.25);
+    background:linear-gradient(#ff9933 0 33.3%,#fff 33.3% 66.6%,#138808 66.6% 100%)}
+  @keyframes inpop{from{opacity:0;transform:translateX(-50%) scale(.6)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+  @keyframes inpulse{0%,100%{box-shadow:0 4px 16px rgba(0,0,0,.35),0 0 0 0 rgba(255,153,51,.0)}50%{box-shadow:0 4px 16px rgba(0,0,0,.35),0 0 0 7px rgba(255,153,51,.18)}}
+  @keyframes inshine{0%,55%{left:-60%}100%{left:130%}}
+  .tag{font-weight:500}.tag.in{color:#ffb15c}.tag.qs{color:#8fd3d9}
+  .sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;font-size:15px;font-weight:500}
+  .sec small{font-weight:300;color:#aaa;font-size:13px}
+  .sec.in{color:#ffb15c}
+  .grid + .sec{margin-top:22px}
+  .tile.in{box-shadow:inset 0 0 0 1.5px rgba(255,153,51,.7)}
+  .tile .tag.in{font-size:11.5px}
+  @media (prefers-reduced-motion:reduce){.inpill,.inpill::after{animation:none}}
 </style>
 </head>
 <body>
@@ -138,6 +160,12 @@
         bNah = document.getElementById('bNah'), bYeah = document.getElementById('bYeah');
   let idx = 0, busy = false, results = [];
 
+  const isIndia = p => /made in india/i.test(p.brand || '');
+  function setBrand(el, brand){
+    const parts = String(brand || '').split('|'), base = parts[0].trim(), tag = (parts[1] || '').trim();
+    el.textContent = base;
+    if (tag){ el.appendChild(document.createTextNode(' | ')); const t = document.createElement('span'); t.className = 'tag ' + (/made in india/i.test(tag) ? 'in' : 'qs'); t.textContent = tag; el.appendChild(t); }
+  }
   function cardEl(p, back){
     const c = document.createElement('div');
     c.className = 'card' + (back ? ' back' : '');
@@ -145,7 +173,8 @@
       '<div class="meta"><h2></h2><p class="b"></p><p class="d"></p></div>';
     c.querySelector('img').src = p.image;
     c.querySelector('h2').textContent = p.name;
-    c.querySelector('.b').textContent = p.brand;
+    c.querySelector('.photo').insertAdjacentHTML('beforeend', isIndia(p) ? '<span class="inpill"><i class="flag"></i>MADE IN INDIA</span>' : '');
+    setBrand(c.querySelector('.b'), p.brand);
     const d = c.querySelector('.d'); if (p.designer) d.textContent = 'Designed by ' + p.designer; else d.remove();
     if (p.focus) c.querySelector('img').style.objectPosition = p.focus;
     return c;
@@ -166,17 +195,28 @@
     const liked = P.filter((_, i) => results[i] === 'yeah');
     done.style.display = 'flex';
     done.innerHTML = '<div class="dscroll"><h2>Your shortlist</h2><p class="sub">' + liked.length + ' of ' + P.length + ' liked</p><div class="grid"></div></div><div class="dfoot"><p class="toast" id="toast" role="status"></p></div>';
-    const g = done.querySelector('.grid');
-    liked.forEach(p => {
-      const t = document.createElement('div'); t.className = 'tile';
+    const g = done.querySelector('.grid'), holder = g.parentNode;
+    const indiaItems = liked.filter(isIndia), otherItems = liked.filter(p => !isIndia(p));
+    function tile(p){
+      const t = document.createElement('div'); t.className = 'tile' + (isIndia(p) ? ' in' : '');
       t.innerHTML = '<img alt=""><div></div>';
       t.querySelector('img').src = p.image;
       if (p.focus) t.querySelector('img').style.objectPosition = p.focus;
       t.querySelector('div').innerHTML = '<b style="font-weight:500"></b><br><small></small>';
-      t.querySelector('b').textContent = p.name; t.querySelector('small').textContent = p.brand;
-      g.appendChild(t);
-    });
-    if (!liked.length) g.innerHTML = '<p class="sub" style="grid-column:1/-1">Nothing yet. Try again?</p>';
+      t.querySelector('b').textContent = p.name; setBrand(t.querySelector('small'), p.brand);
+      return t;
+    }
+    function section(title, arr, cls){
+      if (!arr.length) return;
+      const h = document.createElement('div'); h.className = 'sec ' + cls;
+      h.innerHTML = (cls === 'in' ? '<i class="flag"></i>' : '') + '<span></span><small>' + arr.length + '</small>';
+      h.querySelector('span').textContent = title; holder.appendChild(h);
+      const gg = document.createElement('div'); gg.className = 'grid'; arr.forEach(p => gg.appendChild(tile(p))); holder.appendChild(gg);
+    }
+    g.remove();
+    section('India made products | BIS', indiaItems, 'in');
+    section('All other products', otherItems, 'oth');
+    if (!liked.length) holder.insertAdjacentHTML('beforeend', '<p class="sub">Nothing yet. Try again?</p>');
     const foot = done.querySelector('.dfoot'), toast = done.querySelector('#toast');
     const pdf = document.createElement('button'); pdf.className = 'btn pdf'; pdf.textContent = 'Download selection as PDF';
     pdf.onclick = async () => {
@@ -198,7 +238,7 @@
   async function notify(liked){
     try {
       const r = await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: P.length, selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '' })) }) });
+        body: JSON.stringify({ total: P.length, selected: liked.map(p => ({ name: p.name, brand: p.brand, designer: p.designer || '', india: isIndia(p) })) }) });
       return r.ok;
     } catch (e) { return false; }
   }
@@ -228,19 +268,33 @@
       return bh;
     }
     const cw = (W - 2 * M - (COLS - 1) * GAP) / COLS, ih = cw * 4 / 3, th = 17, pitch = ih + th + 7;
-    const imgs = await Promise.all(items.map(p => loadImg(p.image)));
+    const ind = items.filter(isIndia), oth = items.filter(p => !isIndia(p)), ordered = ind.concat(oth);
+    const imgs = new Map(await Promise.all(ordered.map(async p => [p, await loadImg(p.image)])));
     let y = band(true) + 10, col = 0;
-    items.forEach((p, i) => {
-      if (col === 0 && y + ih + th > H - M) { doc.addPage(); y = band(false) + 10; }
-      const x = M + col * (cw + GAP);
-      doc.addImage(tileData(imgs[i], p.focus, 600, 800), 'JPEG', x, y, cw, ih);
-      doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-      doc.text(doc.splitTextToSize(p.name, cw)[0], x, y + ih + 5.5);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110, 110, 110);
-      doc.text(doc.splitTextToSize(p.brand, cw)[0], x, y + ih + 10);
-      if (p.designer) doc.text(doc.splitTextToSize('Designed by ' + p.designer, cw)[0], x, y + ih + 14.5);
-      if (++col === COLS) { col = 0; y += pitch; }
-    });
+    function drawSection(title, arr, india){
+      if (!arr.length) return;
+      if (y + 12 + ih + th > H - M) { doc.addPage(); y = band(false) + 10; }
+      if (india) { const fx = M, fy = y - 3.2, fw = 7, fh = 4.6;
+        doc.setFillColor(255, 153, 51); doc.rect(fx, fy, fw, fh / 3, 'F'); doc.setFillColor(235, 235, 235); doc.rect(fx, fy + fh / 3, fw, fh / 3, 'F'); doc.setFillColor(19, 136, 8); doc.rect(fx, fy + 2 * fh / 3, fw, fh / 3, 'F'); }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(india ? 205 : 20, india ? 110 : 20, india ? 10 : 20);
+      doc.text(title + '  (' + arr.length + ')', M + (india ? 10 : 0), y);
+      y += 6; col = 0;
+      arr.forEach(p => {
+        if (col === 0 && y + ih + th > H - M) { doc.addPage(); y = band(false) + 10; }
+        const x = M + col * (cw + GAP);
+        doc.addImage(tileData(imgs.get(p), p.focus, 600, 800), 'JPEG', x, y, cw, ih);
+        doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+        doc.text(doc.splitTextToSize(p.name, cw)[0], x, y + ih + 5.5);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110, 110, 110);
+        doc.text(doc.splitTextToSize(p.brand, cw)[0], x, y + ih + 10);
+        if (p.designer) doc.text(doc.splitTextToSize('Designed by ' + p.designer, cw)[0], x, y + ih + 14.5);
+        if (++col === COLS) { col = 0; y += pitch; }
+      });
+      if (col !== 0) { col = 0; y += pitch; }
+      y += 4;
+    }
+    drawSection('India made products | BIS', ind, true);
+    drawSection('All other products', oth, false);
     return doc.output('blob');
   }
   async function savePdf(blob, filename){
