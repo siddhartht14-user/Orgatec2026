@@ -24,5 +24,7 @@ window.PRODUCTS = [
   { name: "HushFree S Hybrid", brand: "HushOffice", designer: "", image: "img/hushfree-s-hybrid.jpg" },
   { name: "HushFree M Access", brand: "HushOffice", designer: "", image: "img/hushfree-m-access.jpg" },
   { name: "Belong Monitor Arm", brand: "Haworth", designer: "", image: "img/belong-monitor-arm.jpg", focus: "35% 50%" },
-  { name: "HushFree S", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-s.jpg", focus: "48% 50%" }
+  { name: "HushFree S", brand: "HushOffice | India Quickship", designer: "", image: "img/hushfree-s.jpg", focus: "48% 50%" },
+  { name: "Poppy Lounge", brand: "Haworth", designer: "Patricia Urquiola", image: "img/poppy-lounge-2.jpg" },
+  { name: "Poppy Conference", brand: "Haworth | Made in India", designer: "Patricia Urquiola", image: "img/poppy-conference.jpg" }
 ];
